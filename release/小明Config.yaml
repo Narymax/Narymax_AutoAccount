@@ -1,0 +1,9 @@
+user: 小明
+# 代号，随便一个字母
+character: M
+# 交易金额低于些数值的不参入统计
+min_pay_filter: 0.1
+# 是否使用支付宝、微信系统智能分类作为第一级分类，不使用的话就是'其它'
+use_suggesstion_classify: True
+# 默认 项目名称
+default_proj_name: 家庭支出
