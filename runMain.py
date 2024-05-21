@@ -35,42 +35,7 @@ def searchStrInStringSeries(list,string):
             return True
     return False
 
-def is_contained_shopping(string):
-    list = ['超市','开市客']
-    return searchStrInStringSeries(list ,string)
 
-def is_contained_restrant(string):
-    list = ['生煎','饼','饺','饭','汉堡','人餐' ]
-    return searchStrInStringSeries(list, string)
-
-def is_contained_train(string):
-    list = ['铁路12306','火车票']
-    return searchStrInStringSeries(list, string)
-
-def is_contained_taxi(string):
-    list = ['滴滴','打车','出租车']
-    return searchStrInStringSeries(list, string)
-
-def is_contained_parkingFee(string):
-    list = ['停车']
-    return searchStrInStringSeries(list, string)
-
-# 生活缴费 水电煤
-def is_contained_LivingPayment(string):
-    list = ['水票','电费','天然气','气费']
-    return searchStrInStringSeries(list, string)
-
-def is_contained_phoneAndInternetFee(string):
-    list = ['话费充值','宽带']
-    return searchStrInStringSeries(list, string)
-
-def is_contained_redPacketTransferAccount(string):
-    list = ['红包','转账']
-    return searchStrInStringSeries(list, string)
-
-def is_contained_huaPayDebet(string):
-    list = ['花呗|信用购','信用购','主动还款-花呗']
-    return searchStrInStringSeries(list, string)
 
 # ['He' ,'ui' ,'kk'] -> 'He|ui|kk'
 def list2orString(list):
@@ -88,6 +53,41 @@ def select_directory():
     return directory_path
 
 
+#  提取包含手机的mask
+def extract_phone(df,column_name):
+
+        pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
+        mask_middle = df[column_name].str.contains(pattern_middle, regex=True)
+        pattern_begin = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配从头开始连续11位数字 1731234567aa
+        mask_begin = df[column_name].str.contains(pattern_begin, regex=True)
+        pattern_end = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字然后结束  aabb1731234567
+        mask_end = df[column_name].str.contains(pattern_end, regex=True)
+        mask = mask_middle | mask_begin | mask_end
+        print("phone number extracted\n")
+        print(df[mask])
+        return mask
+
+def replace_continue_number(df,colum_name,num=9,replace_char=''):
+        pattern = r'(\d{{{0},}})'.format(num)   # 匹配连续出现num位及以上数字
+        # 提取连续出现num位及以上数字的行
+        matches = df[colum_name].str.extractall(pattern)
+        print(matches)  # 打印匹配的结果
+
+        df[colum_name] = df[colum_name].str.replace(pattern, replace_char)
+        print("消除连续出现",num,"位及以上的数字，并且替换成\" ",replace_char,"\"\n")
+        return df
+
+# 屏蔽交易号 （默认不屏蔽手机号）
+# 交易号判定，连续数字大于9个,(含有手机号的需要超过11个)
+def redacte_key_number(df,colum_name,dedacte_phone_number=False,redacte_trade_number=True,redacte_show_char=''):
+        # 含有手机号码的匹配行
+        mask = extract_phone(df,colum_name)
+        df[mask] = replace_continue_number(df[mask],colum_name,num=12,replace_char=redacte_show_char)
+
+        # 不含有手机号码的行
+        df[~mask] = replace_continue_number(df[~mask],colum_name,replace_char=redacte_show_char)
+        return df
+
 # file_extension = ".txt"
 def select_file(file_extension = '',show_title = '请选择文件'):
     root = tk.Tk()
@@ -103,9 +103,6 @@ def select_file(file_extension = '',show_title = '请选择文件'):
     # file_path = filedialog.askopenfilename(filetypes=[("csv格式", "*.csv")])  # 打开指定格式
     root.quit()
     return file_path
-
-def classifyByFunc(df,classifyfunc):
-    return df['交易对方'].apply(classifyfunc) | df['商品'].apply(classifyfunc) | df['备注'].apply(classifyfunc)
 
 
 def auto_classify(df,use_tamplate=True):
@@ -314,18 +311,7 @@ def wechat_alipay_bill_convert():
         # data_verbose['A'] = data_verbose['Time'].dt.strftime('%Y/%m/%d')
 
         # 判断指定列是否包含关键词
-        # result = data_verbose['C'].str.contains('超市|开市客|大润发')
-
-        result_shopping = data_verbose['C'].apply(is_contained_shopping)
-        # print(data_verbose.loc[result_shopping,'classify'])
-        data_verbose.loc[result_shopping, 'classify'] = '商超购物'
-        data_verbose.loc[result_shopping, '项目'] = default_project_name
-
-        result_restaurant1 = data_verbose['C'].apply(is_contained_restrant)
-        result_restaurant2 = data_verbose['D'].apply(is_contained_restrant)
-        data_verbose.loc[result_restaurant1 | result_restaurant2, 'classify'] = '一日三餐'
-        data_verbose.loc[result_restaurant1 | result_restaurant2, '项目'] = default_project_name
-
+        # '红包|转账' 改成  '红包转账'
         data_verbose.loc[data_verbose['B'].str.contains('红包|转账'), 'classify'] = '红包转账'
 
         # 删除多余的列
@@ -343,6 +329,7 @@ def wechat_alipay_bill_convert():
 
         # 备注信息尽量保留
         data_verbose['备注'] = data_verbose['商品'] + '#' + data_verbose['交易对方'] + data_verbose['账单原始备注']
+        data_verbose = redacte_key_number(data_verbose,'备注',redacte_show_char="****")
         data_verbose['成员'] = user
         result_pay = data_verbose['收/支'].str.contains('支出')
         data_verbose.loc[result_pay, '项目'] = default_project_name
@@ -412,9 +399,10 @@ def wechat_alipay_bill_convert():
         # 去掉小于最小金额的
         df.drop(df[df['金额'].astype('float') < min_pay].index, inplace=True)
 
-        # 中信银行信用卡分期(0605) 2期 ->  中信银行信用卡(0605)
+        # 中信银行信用卡分期(0123) 2期 ->  中信银行信用卡(0123)
         # 冗余内容移动到备注后面
         df['备注'] = df['备注'].fillna('')
+
         df['账单原始备注'] = df['备注']
         df['收/付款方式'] = df['收/付款方式'].fillna('')
         # mask = df['收/付款方式'].str.contains(r')')
@@ -429,6 +417,9 @@ def wechat_alipay_bill_convert():
         # df['备注'] = df['备注'].str.split('&').str[0]
         df['temp'] = df['temp'].fillna('')
         df['备注'] = df['备注'] + df['商品说明'] + '#' + df['temp'] + '#' + df['交易对方']
+
+        # 屏蔽交易号
+        df = redacte_key_number(df,'备注',redacte_show_char="****")
 
         # df['备注'] = df['备注']  + df['temp']
         # df = df.drop(columns=['temp'])
