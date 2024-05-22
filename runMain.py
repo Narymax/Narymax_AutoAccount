@@ -9,7 +9,8 @@ import yaml
 import os
 import os.path as op
 import sys
-
+from util import select_file_from_tk
+from util import get_current_path
 
 def select_directory():
     root = tk.Tk()
@@ -17,12 +18,6 @@ def select_directory():
     directory_path = filedialog.askdirectory()  # 打开目录选择对话框
     return directory_path
 
-def get_current_path():
-    if getattr(sys,'frozen',False):
-        application_path = os.path.dirname(sys.executable)
-    elif __file__:
-        application_path = os.path.dirname(__file__)
-    return application_path
 
 
 def print_hi(name):
@@ -88,21 +83,6 @@ def redacte_key_number(df,colum_name,dedacte_phone_number=False,redacte_trade_nu
         df[~mask] = replace_continue_number(df[~mask],colum_name,replace_char=redacte_show_char)
         return df
 
-# file_extension = ".txt"
-def select_file(file_extension = '',show_title = '请选择文件'):
-    root = tk.Tk()
-    root.withdraw()  # 隐藏主窗口
-    # file_path = filedialog.askopenfilename()  # 打开文件选择对话框
-    curpath = os.path.dirname(os.path.realpath(__file__))
-    curpath = get_current_path()
-
-    if file_extension != '':
-        file_path = filedialog.askopenfilename(initialdir=curpath,title=show_title, filetypes=[(file_extension, "*"+file_extension)])
-    else:
-        file_path = filedialog.askopenfilename(initialdir=curpath,title=show_title)  # 打开文件选择对话框
-    # file_path = filedialog.askopenfilename(filetypes=[("csv格式", "*.csv")])  # 打开指定格式
-    root.quit()
-    return file_path
 
 
 def auto_classify(df,use_tamplate=True):
@@ -117,7 +97,7 @@ def auto_classify(df,use_tamplate=True):
         cfg_str = f.read()
         match_list = yaml.load(cfg_str,Loader=yaml.SafeLoader)
     else:
-        match_list = select_file('.yaml',show_title='请选择自定义分类关键词文件')
+        match_list = select_file_from_tk('.yaml',show_title='请选择自定义分类关键词文件')
 
     for match in match_list:
         # 一个match 是一个规则 list
@@ -141,7 +121,7 @@ def auto_classify(df,use_tamplate=True):
 
 # Function to execute program1.py
 def load_sui_html_category():
-    html_file_path = select_file('.html',
+    html_file_path = select_file_from_tk('.html',
                            show_title='请选择随手记支出分类.html (https://www.sui.com/category/budgetCategory.do)')
 
     with open(html_file_path, 'r', encoding='utf-8') as f:
@@ -231,7 +211,7 @@ def wechat_alipay_bill_convert():
     curpath = current_path
     print(curpath)
 
-    yamlpath = select_file('.yaml', '请选择配置文件')
+    yamlpath = select_file_from_tk('.yaml', '请选择配置文件')
     f = open(yamlpath, 'r', encoding='utf-8')
     cfg_str = f.read()
 
@@ -249,7 +229,7 @@ def wechat_alipay_bill_convert():
     print_hi(user)
 
     # 读取帐单 文件
-    csv_file_path = select_file('.csv', show_title='请选择账单文件(支付宝、微信都可以)')
+    csv_file_path = select_file_from_tk('.csv', show_title='请选择账单文件(支付宝、微信都可以)')
 
     names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
 
@@ -329,6 +309,7 @@ def wechat_alipay_bill_convert():
 
         # 备注信息尽量保留
         data_verbose['备注'] = data_verbose['商品'] + '#' + data_verbose['交易对方'] + data_verbose['账单原始备注']
+        # 敏感交易号屏蔽
         data_verbose = redacte_key_number(data_verbose,'备注',redacte_show_char="****")
         data_verbose['成员'] = user
         result_pay = data_verbose['收/支'].str.contains('支出')
@@ -513,14 +494,20 @@ if __name__ == "__main__":
 
     # Create buttons to run program1.py and program2.py
     button1 = tk.Button(top_frame, text="通过html文件导入自定义支出分类", command=load_sui_html_category)
+    # button1 = tk.Button(top_frame, text="通过html文件导入自定义支出分类", command=print_hi("Hello World"))
+
     button1.pack()
 
     # Create a frame for buttons in the bottom half of the window
     bottom_frame = tk.Frame(root)
     bottom_frame.grid(row=1, column=0, pady=50)
 
+    # button2 = tk.Button(bottom_frame, text="生成微信支付宝帐单(随手记web模板)", command=wechat_alipay_bill_convert)
     button2 = tk.Button(bottom_frame, text="生成微信支付宝帐单(随手记web模板)", command=wechat_alipay_bill_convert)
+
     button2.pack()
 
 
     root.mainloop()
+
+    print("Hello World")

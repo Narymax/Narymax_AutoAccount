@@ -1,26 +1,31 @@
 # Narymax_AutoAccount
-针对微信、支付宝账单，根据自定义关键字匹配商家、商品名称，进行分类，导入记账软件
+针对微信、支付宝账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
 
 ## 数据提取支持功能
-- 多用户记账
+- 多用户记账设置
 - 自定义二级分类
 - 关键字分类匹配
 - 交易号屏蔽
 - 支持项目分类
-- 商家（微信、支付宝）
+- 商家区分（微信、支付宝）
 
 ## 需要条件
-下载relese文件夹下面的rumMain.exe、yaml配置文件，都放到一个英文路径下面 
+下载relese文件夹下面的[rumMain.exe](release/AutoAccount.exe)、[yaml配置文件](release/小明Config.yaml)，都放到一个英文路径下面 
 
 ## 使用方法
-1. 导出微信、支付宝原始账单，准备csv账单（手机可以操作）参考教程：
+1. 导出微信、支付宝原始账单，准备csv账单（手机可以操作）</br>
+参考教程：
 [微信账单导出](https://docs.qianjiapp.com/other/import_guide_weixin.html)
 [手机支付宝账单导出](https://docs.qianjiapp.com/other/import_guide_alipay_app.html)
-2. 提取自定义分类，生成分类模板yaml文件（电脑端操作）
-3. *编辑分类模板，添加自定义关键词（可选）（电脑端操作）[（懒人推荐，一劳永逸）](doc/sui.md#二级分类数据抓取)
-4. 生成记账软件可识别的账单
-5. 账单导入记账软件
+2. 下载AutoAccount转换软件,点击一键转换 </br>
+[![pic](res/img/ico.png)](release/AutoAccount.exe) </br>
+![](res/img/one_key_convert.png)
+3. [从软件路径下找到转换账单，上传记账软件](#记账app适配更新状态)
 
+## 其它功能介绍
+1. [上传本地网页，生成分类模板](doc/sui_html_to_yaml.md)
+3. [用户config文件说明](doc/user_config.md)
+4. [关键字模板自定义](doc/my_keywords_edit.md)
 
 
 ## 记账app适配更新状态
