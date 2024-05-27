@@ -1,6 +1,9 @@
 # Narymax_AutoAccount
 针对微信、支付宝账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
 
+[![](res/img/ico/5050/gitee.png)](https://gitee.com/Naymax/Narymax_AutoAccount)
+[![](res/img/ico/5050/github.png)](https://github.com/Narymax/Narymax_AutoAccount)
+
 ## 数据提取支持功能
 - 多用户记账设置
 - 自定义二级分类
@@ -8,6 +11,10 @@
 - 交易号屏蔽
 - 支持项目分类
 - 商家区分（微信、支付宝）
+
+![](res/img/ico/intro.jpg)
+</br>
+![](res/img/sui_panchart.png)
 
 ## 需要条件
 下载relese文件夹下面的[rumMain.exe](release/AutoAccount.exe)、[yaml配置文件](release/小明Config.yaml)，都放到一个英文路径下面 
