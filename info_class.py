@@ -1,5 +1,8 @@
 import yaml
+import csv
+import os
 from util import select_file_from_tk
+from util import get_current_path
 from collections import OrderedDict
 from bs4 import BeautifulSoup
 
@@ -11,7 +14,48 @@ class InfoClass:
         self.min_pay_filter = 0.1
         self.default_proj_name = "家庭支出"
         self.character = "M"
-        self.match_list_rule = []
+        self.use_suggestion_classify = True
+        self.redacte_show_string = "****"
+        self.match_list_rule = []   # 旧版本 ，使用两个yaml
+        self.classify_csv_rule = []  # 新版本，使用一个csv
+
+    def load_config_file_from_tk_window(self):
+        file_path = select_file_from_tk(file_extension = '.csv',show_title = '请选择配置文件 csv类型')
+        self.load_config_file(file_path)
+
+    def load_config_file(self,csv_path):
+        f = open(csv_path,'r',encoding='utf-8-sig')
+        with f:
+            reader = csv.reader(f, delimiter=',')
+            # user = '快乐小猴'
+            # character = 'M'
+            # min_pay_filter = 0.1
+            # use_suggertion_classify = True
+            # default_proj_name = '家庭支出'
+            # redacte_show_string = '****'
+            # classify_rule = []
+
+            for row in reader:
+                parameter = row[0]
+                value = row[1]
+                description = row[2]
+                print(parameter, value, description)
+
+                if 'user' in str(parameter):
+                    self.user = str(value)
+                if 'character' in str(parameter):
+                    self.character = str(value)
+                if 'min_pay_filter' in str(parameter):
+                    self.min_pay_filter = float(value)
+                if 'use_suggertion_classify' in str(parameter):
+                    self.use_suggertion_classify = bool(value)
+                if 'default_proj_name' in str(parameter):
+                    self.default_proj_name = str(value)
+                if 'redacte_show_string' in str(parameter):
+                    self.redacte_show_string = str(value)
+                if '分类规则' in str(parameter):
+                    if str(value) != '':
+                        self.classify_csv_rule.append(row)
 
 
     def get_user_info_from_yaml(self, yaml_path):
@@ -37,6 +81,45 @@ class InfoClass:
         with open('auto_classify_config_tample.yaml', 'w', encoding='utf-8') as file:
             yaml.dump(self.match_list_rule, file, allow_unicode=True)
 
+
+    def create_csv_config_file(self):
+        data = [
+            ["Variables", "Values", "Description"],
+            ["user", self.user, "记账人"],
+            ["character", self.character, "记账人代号，随便取一个字母"],
+            ["min_pay_filter", self.min_pay_filter, "最小筛选金额"],
+            ["use_suggesstion_classify", self.use_suggestion_classify, "使用原始账单默认的分类"],
+            ["default_proj_name", self.default_proj_name, "默认支出的项目名称"],
+            ["redacte_show_string", self.redacte_show_string, "屏蔽交易号码，显示字符，连续数字大于9个"]
+        ]
+
+        current_path = get_current_path()
+        file_name = "config.csv"
+
+        # 先判断路径是否存在，如果不存在就创建
+        path = current_path + "/config"
+        if not os.path.exists(path):
+            os.makedirs(path)
+            print(f"Path '{path}' created successfully.")
+        else:
+            print(f"Path '{path}' already exists.")
+
+        # 创建CSV文件
+        with open(current_path + "/config/" + file_name, mode='w', newline='', encoding='utf-8-sig') as file:
+            writer = csv.writer(file)
+            for row in data:
+                writer.writerow(row)
+            writer.writerow(['']) # 空一行
+
+            if self.classify_csv_rule != []:
+                writer.writerow(['', '第一级分类名称', '第二级分类名称', '关键字'])
+                for row in self.classify_csv_rule:
+                    writer.writerow(row)
+
+        print("CSV文件已创建并数据已写入成功：", current_path + "/config/" + file_name)
+
+
+
     def get_match_list_from_tk(self):
         htmlpath = select_file_from_tk('.html',
                 '请选择随手记支出分类.html (https://www.sui.com/category/budgetCategory.do)')
@@ -46,6 +129,17 @@ class InfoClass:
         else:
             print("打开失败")
             return False
+
+
+    def get_classify_name_from_html(self,account_app_name):
+        if account_app_name == '随手记':
+            flag = self.get_match_list_from_tk()
+            if flag:
+                return True
+            else:
+                return False
+
+
 
     def get_match_list_from_htmlpath(self, html_file_path):
         with open(html_file_path, 'r', encoding='utf-8') as f:
@@ -79,7 +173,7 @@ class InfoClass:
                 else:
                     print('一级分类 is empty')
 
-
+        # 适配yaml
         # 生成自动分类模板
         # [
         #     ['一级分类', '二级分类', ['备注',......待手动添加关键字]],
@@ -103,6 +197,24 @@ class InfoClass:
                 list_of_matches.append(tempt_list_sec)
 
         self.match_list_rule = list_of_matches
+
+        # 适配csv
+        # [
+        #     ['分类规则','一级分类','二级分类'],
+        #     ['分类规则','一级分类','二级分类'],
+        #     ['分类规则','一级分类','二级分类'],
+        # ]
+        list_csv_list = []
+        for firstClass, value in my_dict.items():
+            for secondClass in value:
+                # 第二层
+                tempt_list_sec = []
+                tempt_list_sec.append('分类规则')
+                tempt_list_sec.append(firstClass)
+                tempt_list_sec.append(secondClass)
+
+                list_csv_list.append(tempt_list_sec)
+        self.classify_csv_rule = list_csv_list
 
 
     def get_match_template_from_tk(self):

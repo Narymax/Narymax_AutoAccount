@@ -139,6 +139,10 @@ def check_first_column_contains_string(df, specified_string):
     else:
         return False
 
+def load_html_to_classify_rule_list(info_data,selected_value):
+    if selected_value == "随手记":
+        print("随手记")
+
 
 
 

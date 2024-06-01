@@ -1,6 +1,10 @@
 # Narymax_AutoAccount
 针对微信、支付宝账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
 
+本项目是用户私人账单到主流记账软件的中间转换项目，虽然有的记账软件app本身支持账单导入功能，但是使用效果不尽人意，而且把个人的敏感数据也一并上传了。
+
+因此才有了本项目的设计初衷，通过自定义分类关键字，或者文本分类模型，使得导入账单的同时，完成自动分类，而且数据本地保存，随时可以切换记账app，账单导过去即可。
+
 [![](res/img/ico/5050/gitee.png)](https://gitee.com/Naymax/Narymax_AutoAccount)
 [![](res/img/ico/5050/github.png)](https://github.com/Narymax/Narymax_AutoAccount)
 

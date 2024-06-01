@@ -1,8 +1,10 @@
 import tkinter as tk
+from tkinter import messagebox
 from info_class import InfoClass
 from util import print_dog_head
 from util import read_paylist_file
 from util import check_first_column_contains_string
+from util import load_html_to_classify_rule_list
 from wechat_paybill_convert import wechat_paybill_conv
 from ali_paybill_convert import ali_paybill_conv
 
@@ -40,6 +42,25 @@ def load_keywords_clasif_yaml(info_data):
     if flag:
         button_keywords_aclasify.config(text="分类模板读取，完成！")
         print("关键字分类模板读取，完成")
+    window.mainloop()
+
+def load_config(info_data):
+    info_data.load_config_file_from_tk_window()
+    window.mainloop()
+
+
+def create_config(info_data):
+    account_app_name = selected_value.get()
+    result = tk.messagebox.askyesno("是否有html文件", "针对< "+account_app_name+" >是否有本地网页配置文件？")
+    if result:
+        # load_html_to_classify_rule_list(info_data,selected_value.get())
+        info_data.get_classify_name_from_html(account_app_name)
+        print("有html文件")
+    else:
+        print("没有html文件")
+
+    info_data.create_csv_config_file()
+
     window.mainloop()
 
 def paylist_convert(info_data):
@@ -118,7 +139,13 @@ if __name__ == "__main__":
     button_paylist_convert = tk.Button(window, text="微信、支付宝 账单一键转换", command=lambda: paylist_convert(info_data))
     button_paylist_convert.pack()
 
-    button_list = [button_load_html,button_user_config,button_keywords_aclasify,button_paylist_convert]
+    button_config_load = tk.Button(window, text="加载config文件", command=lambda: load_config(info_data))
+    button_config_load.pack()
+
+    button_config_create = tk.Button(window, text="创建config文件", command=lambda: create_config(info_data))
+    button_config_create.pack()
+
+    button_list = [button_load_html,button_user_config,button_keywords_aclasify,button_paylist_convert,button_config_load,button_config_create]
 
 
     # 后面把小明改成默认从class中读的值
