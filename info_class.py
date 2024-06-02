@@ -1,6 +1,8 @@
 import yaml
 import csv
 import os
+import pandas as pd
+import openpyxl
 from util import select_file_from_tk
 from util import get_current_path
 from collections import OrderedDict
@@ -20,42 +22,50 @@ class InfoClass:
         self.classify_csv_rule = []  # 新版本，使用一个csv
 
     def load_config_file_from_tk_window(self):
-        file_path = select_file_from_tk(file_extension = '.csv',show_title = '请选择配置文件 csv类型')
+        file_path = select_file_from_tk(file_extension = '.xls',show_title = '请选择配置文件 xls类型')
         self.load_config_file(file_path)
 
-    def load_config_file(self,csv_path):
-        f = open(csv_path,'r',encoding='utf-8-sig')
-        with f:
-            reader = csv.reader(f, delimiter=',')
-            # user = '快乐小猴'
-            # character = 'M'
-            # min_pay_filter = 0.1
-            # use_suggertion_classify = True
-            # default_proj_name = '家庭支出'
-            # redacte_show_string = '****'
-            # classify_rule = []
+    def load_config_file(self,xls_path):
 
-            for row in reader:
-                parameter = row[0]
-                value = row[1]
-                description = row[2]
-                print(parameter, value, description)
+        print(os.path.exists(xls_path))  # True 表示文件路径正确
 
-                if 'user' in str(parameter):
-                    self.user = str(value)
-                if 'character' in str(parameter):
-                    self.character = str(value)
-                if 'min_pay_filter' in str(parameter):
-                    self.min_pay_filter = float(value)
-                if 'use_suggertion_classify' in str(parameter):
-                    self.use_suggertion_classify = bool(value)
-                if 'default_proj_name' in str(parameter):
-                    self.default_proj_name = str(value)
-                if 'redacte_show_string' in str(parameter):
-                    self.redacte_show_string = str(value)
-                if '分类规则' in str(parameter):
-                    if str(value) != '':
-                        self.classify_csv_rule.append(row)
+        # xlrd 读取xls,xlsx读取失败，应该是pandas版本不对 pandas/io/excel.py报错
+        df = pd.read_excel(xls_path, engine='xlrd')
+        # 初始化一个空列表来存储每行数据
+        rows_as_lists = []
+        # 逐行遍历 DataFrame 并将每行转换为列表
+        for index, row in df.iterrows():
+            row_list = row.tolist()  # 将每行转换为列表
+            rows_as_lists.append(row_list)
+        self.classify_csv_rule = []
+        flag_configfile_exist_calssify_rule = False
+        for row in rows_as_lists:
+            parameter = row[0]
+            value = row[1]
+            description = row[2]
+            # print(parameter, value, description)
+            # 打印每行
+            print(row)
+
+            if 'user' in str(parameter):
+                self.user = str(value)
+            if 'character' in str(parameter):
+                self.character = str(value)
+            if 'min_pay_filter' in str(parameter):
+                self.min_pay_filter = float(value)
+            if 'use_suggertion_classify' in str(parameter):
+                self.use_suggertion_classify = bool(value)
+            if 'default_proj_name' in str(parameter):
+                self.default_proj_name = str(value)
+            if 'redacte_show_string' in str(parameter):
+                self.redacte_show_string = str(value)
+            if '分类规则' in str(parameter):
+                if str(value) != '':
+                    flag_configfile_exist_calssify_rule = True
+                    self.classify_csv_rule.append(row)
+
+        if not flag_configfile_exist_calssify_rule:
+            self.classify_csv_rule = []
 
 
     def get_user_info_from_yaml(self, yaml_path):
@@ -84,17 +94,43 @@ class InfoClass:
 
     def create_csv_config_file(self):
         data = [
-            ["Variables", "Values", "Description"],
+            # ["Variables", "Values", "Description"],
             ["user", self.user, "记账人"],
             ["character", self.character, "记账人代号，随便取一个字母"],
             ["min_pay_filter", self.min_pay_filter, "最小筛选金额"],
             ["use_suggesstion_classify", self.use_suggestion_classify, "使用原始账单默认的分类"],
             ["default_proj_name", self.default_proj_name, "默认支出的项目名称"],
-            ["redacte_show_string", self.redacte_show_string, "屏蔽交易号码，显示字符，连续数字大于9个"]
+            ["redacte_show_string", self.redacte_show_string, "屏蔽交易号码，显示字符，连续数字大于9个"],
+            [""]
         ]
+        if self.classify_csv_rule != []:
+            data.append(['', '第一级分类名称', '第二级分类名称', '关键字'])
+            for row in self.classify_csv_rule:
+                data.append(row)
+
+        # 初始列名
+        initial_columns = ['Variables', 'Values', 'Description']
+        df = pd.DataFrame(columns=initial_columns)
+
+        # 动态添加数据和列
+        for row in data:
+            # 动态扩展 DataFrame 的列数
+            if len(row) > len(df.columns):
+                additional_columns = len(row) - len(df.columns)
+                new_columns = [f'Column{len(df.columns) + i + 1}' for i in range(additional_columns)]
+                df = df.reindex(columns=[*df.columns, *new_columns])
+
+            # 将行数据作为字典，并用空字符串填充没有对应值的列
+            row_dict = {df.columns[i]: row[i] if i < len(row) else '' for i in range(len(df.columns))}
+
+            # 追加行到 DataFrame 中
+            df = df.append(row_dict, ignore_index=True)
+
+        df = df.fillna('')
+        print(df)
 
         current_path = get_current_path()
-        file_name = "config.csv"
+        file_name = "config.xls"
 
         # 先判断路径是否存在，如果不存在就创建
         path = current_path + "/config"
@@ -104,19 +140,12 @@ class InfoClass:
         else:
             print(f"Path '{path}' already exists.")
 
-        # 创建CSV文件
-        with open(current_path + "/config/" + file_name, mode='w', newline='', encoding='utf-8-sig') as file:
-            writer = csv.writer(file)
-            for row in data:
-                writer.writerow(row)
-            writer.writerow(['']) # 空一行
+        # 创建xls文件
+        # 保存到 Excel 文件
+        xls_file_path = current_path + "/config/" + file_name
+        df.to_excel(xls_file_path, index=False, engine='xlwt')
 
-            if self.classify_csv_rule != []:
-                writer.writerow(['', '第一级分类名称', '第二级分类名称', '关键字'])
-                for row in self.classify_csv_rule:
-                    writer.writerow(row)
-
-        print("CSV文件已创建并数据已写入成功：", current_path + "/config/" + file_name)
+        print(f"数据已成功保存到 Excel 文件：{xls_file_path}")
 
 
 

@@ -9,6 +9,7 @@ print(openpyxl.__file__)
 # 读取 Excel 文件 只能读老的 xls
 # xls xlsx区别前者最多256列
 file_path = './output_chinese.xls'
+# file_path = './config.xls'
 
 print(os.path.exists(file_path))  # True 表示文件路径正确
 # xlrd 读取xls,xlsx读取失败，应该是pandas版本不对 pandas/io/excel.py报错

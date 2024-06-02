@@ -81,7 +81,7 @@ def wechat_paybill_conv(df, info_data):
     dstDf = data_verbose[new_order]
 
     # 根据关键字匹配，自动调整二级自动分类
-    dstDf = auto_calssify_by_keyword(dstDf, match_list_rule=info_data.match_list_rule)
+    dstDf = auto_calssify_by_keyword(dstDf, match_list_rule=info_data.classify_csv_rule)
 
     dstDf.to_excel(op.join(get_current_path(), "随手记导入微信账单.xls"), encoding="utf_8_sig", index=False)
 

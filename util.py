@@ -3,6 +3,8 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import sys
+
+import numpy as np
 import pandas as pd
 
 
@@ -104,25 +106,41 @@ def auto_calssify_by_keyword(df,first_classify_col='分类',second_classify_col=
         print('没有找到匹配模板')
         return df
     else:
-        for match in match_list_rule:
-            # 一个match 是一个规则 list
-            # print(match)
-            # print(type(match))
-            # 分类
-            first_class = match[0]
-            # 子分类
-            second_class = match[1]
-            # 从第三个开始是【备注+关键词】
-            for m in match[2:]:
-                if len(m) == 1:
-                    continue
-                else:
-                    # 找匹配
-                    result = df[m[0]].str.contains(list2orString(m[1:]))
-                    df.loc[result, first_classify_col] = first_class
-                    df.loc[result, second_classify_col] = second_class
+        for list_vob in match_list_rule:
 
+            # 使用列表推导式删除空字符串
+            list = [str(item) for item in list_vob if item != '' or item != np.nan]
+            first_class = list[1]
+            second_class =list[2]
+
+            if len(list) <= 3:
+                continue
+            else:
+                result = df['备注'].str.contains(list2orString(list[3:]))
+                df.loc[result, first_classify_col] = first_class
+                df.loc[result, second_classify_col] = second_class
         return df
+
+
+        # for match in match_list_rule:
+        #     # 一个match 是一个规则 list
+        #     # print(match)
+        #     # print(type(match))
+        #     # 分类
+        #     first_class = match[0]
+        #     # 子分类
+        #     second_class = match[1]
+        #     # 从第三个开始是【备注+关键词】
+        #     for m in match[2:]:
+        #         if len(m) == 1:
+        #             continue
+        #         else:
+        #             # 找匹配
+        #             result = df[m[0]].str.contains(list2orString(m[1:]))
+        #             df.loc[result, first_classify_col] = first_class
+        #             df.loc[result, second_classify_col] = second_class
+        #
+        # return df
 
 # ['He' ,'ui' ,'kk'] -> 'He|ui|kk'
 def list2orString(list):

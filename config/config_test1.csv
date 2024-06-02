@@ -1,7 +1,0 @@
-﻿Variables,Values,Description
-user,快乐小猴,记账人
-character,M,记账人代号，随便取一个字母
-min_pay_filter,0.1,最小筛选金额
-use_suggesstion_classify,TRUE,使用原始账单默认的分类
-default_proj_name,家庭支出,默认支出的项目名称
-redacte_show_string,****,屏蔽交易号码，显示字符，连续数字大于9个

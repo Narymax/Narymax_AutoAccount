@@ -1,9 +1,11 @@
 import tkinter as tk
+import os
 from tkinter import messagebox
 from info_class import InfoClass
 from util import print_dog_head
 from util import read_paylist_file
 from util import check_first_column_contains_string
+from util import get_current_path
 from util import load_html_to_classify_rule_list
 from wechat_paybill_convert import wechat_paybill_conv
 from ali_paybill_convert import ali_paybill_conv
@@ -46,6 +48,7 @@ def load_keywords_clasif_yaml(info_data):
 
 def load_config(info_data):
     info_data.load_config_file_from_tk_window()
+    label_user.config(text=info_data.user)
     window.mainloop()
 
 
@@ -125,7 +128,16 @@ if __name__ == "__main__":
     label_app = tk.Label(window, text="Selected value: " + selected_value.get())
     label_app.pack()
 
-    info_data = InfoClass('小明')
+    current_path = get_current_path()
+    config_file_name = current_path + "/config/config.xls"
+
+    if not os.path.exists(config_file_name):
+        print(f"Path '{config_file_name}'默认配置文件不存在.")
+        info_data = InfoClass('快乐小猴')
+    else:
+        print(f"Path '{config_file_name}' 默认配置文件already exists，使用config.xls信息初始化.")
+        info_data = InfoClass('')
+        info_data.load_config_file(config_file_name)
 
     button_load_html = tk.Button(window, text="上传本地网页，生成分类模板", command=lambda: load_html_convert_to_yaml(info_data))
     button_load_html.pack()
@@ -149,7 +161,7 @@ if __name__ == "__main__":
 
 
     # 后面把小明改成默认从class中读的值
-    label_user = tk.Label(window, text="用户: " + "小明")
+    label_user = tk.Label(window, text="用户: " + info_data.user)
     label_user.pack()
 
     # Start the main event loop

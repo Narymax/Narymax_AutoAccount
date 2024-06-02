@@ -29,36 +29,17 @@ for row in data:
 df = df.fillna('')
 print(df)
 # 指定文件路径，例如保存为当前路径下的 `output.xlsx`
-file_path = './output_包含中文.xlsx'
+file_path = './output_0602.xlsx'
 
 # 保存到 Excel 文件
 df.to_excel(file_path, index=False, engine='openpyxl')
 
 print(f"数据已成功保存到 Excel 文件：{file_path}")
 
-file_path_xls = './output_包含中文.xls'
+file_path_xls = './output_0602.xls'
 
 # 保存到 Excel 文件
-df.to_excel(file_path_xls, index=False, engine='openpyxl')
+df.to_excel(file_path_xls, index=False, engine='xlwt')
 
 print(f"数据已成功保存到 Excel 文件：{file_path_xls}")
 
-
-# 假设这是你的二维数据
-data = [
-    ['Name', 'Age', 'City'],
-    ['Alice', 30, 'New York'],
-    ['Bob', 25, 'Los Angeles'],
-    ['Charlie', 35, 'Chicago']
-]
-
-# 转换成 DataFrame
-df = pd.DataFrame(data[1:], columns=data[0])
-
-# 指定文件路径，例如保存为当前路径下的 `output.xlsx`
-file_path = './output.xlsx'
-
-# 保存到 Excel 文件
-# df.to_excel(file_path, index=False, engine='openpyxl')
-
-print(f"数据已成功保存到 Excel 文件：{file_path}")
