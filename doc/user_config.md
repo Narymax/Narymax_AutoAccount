@@ -1,3 +1,5 @@
+软件默认加载config文件夹下的config.xls配置文件，若找不到指定文件，则使用如下信息
+文件包含信息如下
 ```yaml
 user: 小明
 # 代号，随便一个字母
@@ -9,7 +11,8 @@ use_suggesstion_classify: True
 # 默认 项目名称
 default_proj_name: 家庭支出
 ```
-使用记事本编辑这个config.yaml文件说明
+
+
 ## user 记账人
 多人记账，可以把user修改成指定成员
 ## character 代号
@@ -27,3 +30,7 @@ character字母默认添加到账户名称的前面，例如设置小张的字�
 
 ## default_proj_name 默认项目名称
 支出的项目名称，不需要的话可以删除
+
+## 二级分类关键字表
+在每个二级分类后面添加关键字，编辑后保存这个excel文档，然后软件再加载该config.xls生效
+![](../res/img/V1.2keywords.png)

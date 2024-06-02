@@ -30,13 +30,14 @@
 [手机支付宝账单导出](https://docs.qianjiapp.com/other/import_guide_alipay_app.html)
 2. 下载AutoAccount转换软件,点击一键转换 </br>
 [![pic](res/img/ico.png)](release/AutoAccount.exe) </br>
-![](res/img/one_key_convert.png)
+![](res/img/mainwindow_V1.2.png)
 3. [从软件路径下找到转换账单，上传记账软件](#记账app适配更新状态)
 
 ## 其它功能介绍
-1. [上传本地网页，生成分类模板](doc/sui_html_to_yaml.md)
-3. [用户config文件说明](doc/user_config.md)
-4. [关键字模板自定义](doc/my_keywords_edit.md)
+1. [上传本地网页，生成分类模板](doc/sui_html_to_xls.md)
+2. [加载cinfig文件，config文件及关键字说明](doc/user_config.md)
+3. [创建config文件](doc/create_config.md)
+
 
 
 ## 记账app适配更新状态

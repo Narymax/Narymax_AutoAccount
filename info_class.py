@@ -3,10 +3,12 @@ import csv
 import os
 import pandas as pd
 import openpyxl
+import numpy as np
 from util import select_file_from_tk
 from util import get_current_path
 from collections import OrderedDict
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 # 用户配置类
 # 查看测试用例
@@ -45,7 +47,7 @@ class InfoClass:
             description = row[2]
             # print(parameter, value, description)
             # 打印每行
-            print(row)
+            print([row_item for row_item in row if row_item not in [np.nan,'']])
 
             if 'user' in str(parameter):
                 self.user = str(value)
@@ -130,7 +132,8 @@ class InfoClass:
         print(df)
 
         current_path = get_current_path()
-        file_name = "config.xls"
+
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+"config.xls"
 
         # 先判断路径是否存在，如果不存在就创建
         path = current_path + "/config"

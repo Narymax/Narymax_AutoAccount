@@ -22,33 +22,10 @@ def update_label_app(selected_value):
             button.config(state=tk.DISABLED)
 
 
-def load_html_convert_to_yaml(info_data):
-        flag = info_data.get_match_list_from_tk()
-        # button_load_html.config(text="完成")
-        if flag:
-            button_load_html.config(text="上传本地网页，生成分类模板，完成！")
-            info_data.create_auto_classify_template()
-            print("导入html成功")
-        window.mainloop()
-
-def load_user_config(info_data):
-    flag = info_data.get_user_info_from_tk()
-    if flag:
-        button_user_config.config(text="用户config文件更新，完成！")
-        print("用户config文件修改，完成")
-        label_user.config(text="用户: " + info_data.user)
-    window.mainloop()
-
-def load_keywords_clasif_yaml(info_data):
-    flag = info_data.get_match_template_from_tk()
-    if flag:
-        button_keywords_aclasify.config(text="分类模板读取，完成！")
-        print("关键字分类模板读取，完成")
-    window.mainloop()
-
 def load_config(info_data):
     info_data.load_config_file_from_tk_window()
     label_user.config(text=info_data.user)
+    button_config_load.config(text="加载配置文件完成！继续点击覆盖当前配置文件！")
     window.mainloop()
 
 
@@ -63,6 +40,7 @@ def create_config(info_data):
         print("没有html文件")
 
     info_data.create_csv_config_file()
+    button_config_create.config(text="创建配置文件完成！继续点击创建配置文件！")
 
     window.mainloop()
 
@@ -94,15 +72,15 @@ if __name__ == "__main__":
 
     print_dog_head()
 
-    print("欢迎使用自动记账工具V1.1\n")
+    print("欢迎使用自动记账工具V1.2\n")
     print("目前只支持随手记，读取微信支付宝账单\n \n \n \n")
     print("教程：https://gitee.com/Naymax/Narymax_AutoAccount/blob/main/README.md")
 
 
     # Create the main window
     window = tk.Tk()
-    window.title("Narymax AutoAccount V1.1")
-    window.geometry("400x260")
+    window.title("Narymax AutoAccount V1.2")
+    window.geometry("300x180")
 
     # Create a dropdown list
     options = [ "随手记",
@@ -139,30 +117,22 @@ if __name__ == "__main__":
         info_data = InfoClass('')
         info_data.load_config_file(config_file_name)
 
-    button_load_html = tk.Button(window, text="上传本地网页，生成分类模板", command=lambda: load_html_convert_to_yaml(info_data))
-    button_load_html.pack()
-
-    button_user_config = tk.Button(window, text="用户config文件修改", command=lambda: load_user_config(info_data))
-    button_user_config.pack()
-
-    button_keywords_aclasify = tk.Button(window, text="导入关键字分类模板", command=lambda: load_keywords_clasif_yaml(info_data))
-    button_keywords_aclasify.pack()
-
-    button_paylist_convert = tk.Button(window, text="微信、支付宝 账单一键转换", command=lambda: paylist_convert(info_data))
-    button_paylist_convert.pack()
-
     button_config_load = tk.Button(window, text="加载config文件", command=lambda: load_config(info_data))
     button_config_load.pack()
 
     button_config_create = tk.Button(window, text="创建config文件", command=lambda: create_config(info_data))
     button_config_create.pack()
 
-    button_list = [button_load_html,button_user_config,button_keywords_aclasify,button_paylist_convert,button_config_load,button_config_create]
+    button_paylist_convert = tk.Button(window, text="微信、支付宝 账单一键转换", command=lambda: paylist_convert(info_data))
+    button_paylist_convert.pack()
+
+    button_list = [button_paylist_convert,button_config_load,button_config_create]
 
 
     # 后面把小明改成默认从class中读的值
     label_user = tk.Label(window, text="用户: " + info_data.user)
     label_user.pack()
+
 
     # Start the main event loop
     window.mainloop()
