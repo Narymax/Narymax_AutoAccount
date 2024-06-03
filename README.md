@@ -1,15 +1,17 @@
 # Narymax_AutoAccount快速记账项目
 针对微信、支付宝等账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
 
+[![](res/img/ico/5050/github.png)](https://github.com/Narymax/Narymax_AutoAccount)
+[![](res/img/ico/5050/gitee.png)](https://gitee.com/Naymax/Narymax_AutoAccount)
+</br>
+[blibli: 【自动记账，懒人记账，微信支付宝账单合并，自动分类（自定义账单商家或商品识别关键字后，可以几分钟记完两个月的流水账）】]( https://www.bilibili.com/video/BV13JTge4Emi/?share_source=copy_web&vd_source=8501da08a2b809d0ff4d9cc3d78c6643)
+## 项目简介
 本项目是从用户私人账单到主流记账软件的转换项目，虽然有的记账软件app本身支持账单导入功能，但是使用效果不尽人意，而且把个人的敏感数据也一并上传了。
 
 因此才有了本项目的设计初衷，通过自定义分类关键字，或者文本分类模型，使得导入账单的同时，完成自动分类，而且数据本地保存，随时可以切换记账app，软件生成的账单导过去即可。
 
 
-[![](res/img/ico/5050/gitee.png)](https://gitee.com/Naymax/Narymax_AutoAccount)
-[![](res/img/ico/5050/github.png)](https://github.com/Narymax/Narymax_AutoAccount)
-## 项目简介
-![](res\diagram\diagram.png)
+![](res/diagram/diagram.png)
 
 ## 更新状态
 AutoAccount_V1.2
