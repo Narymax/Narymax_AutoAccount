@@ -1,12 +1,19 @@
-# Narymax_AutoAccount
-针对微信、支付宝账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
+# Narymax_AutoAccount快速记账项目
+针对微信、支付宝等账单，根据自定义关键字匹配商家、商品名称，进行二级分类，导入记账软件
 
 本项目是从用户私人账单到主流记账软件的转换项目，虽然有的记账软件app本身支持账单导入功能，但是使用效果不尽人意，而且把个人的敏感数据也一并上传了。
 
 因此才有了本项目的设计初衷，通过自定义分类关键字，或者文本分类模型，使得导入账单的同时，完成自动分类，而且数据本地保存，随时可以切换记账app，软件生成的账单导过去即可。
 
+
 [![](res/img/ico/5050/gitee.png)](https://gitee.com/Naymax/Narymax_AutoAccount)
 [![](res/img/ico/5050/github.png)](https://github.com/Narymax/Narymax_AutoAccount)
+## 项目简介
+![](res\diagram\diagram.png)
+
+## 更新状态
+AutoAccount_V1.2
+- 支持微信、支付宝账单到随手记的适配
 
 ## 数据提取支持功能
 - 多用户记账设置
@@ -29,7 +36,9 @@
 [微信账单导出](https://docs.qianjiapp.com/other/import_guide_weixin.html)
 [手机支付宝账单导出](https://docs.qianjiapp.com/other/import_guide_alipay_app.html)
 2. 下载AutoAccount转换软件,点击一键转换 </br>
-[![pic](res/img/ico.png)](release/AutoAccount.exe) </br>
+
+[![pic](res/img/ico.png)](release/AutoAccount.exe) 
+</br>
 ![](res/img/mainwindow_V1.2.png)
 3. [从软件路径下找到转换账单，上传记账软件](#记账app适配更新状态)
 
@@ -65,7 +74,7 @@
 
 ## 欢迎更多老鸽来 PR
 main入口
-```run AutoAccount.py```
+run  ```AutoAccount.py```
 </br>
 python 3.6.15
 [环境依赖](requirements.txt)
