@@ -31,12 +31,12 @@ def read_paylist_file():
     else:
         csv_file_path = os.path.abspath(csv_file_path)
         try:
-            # 仅用于打开支付宝账单，打开微信账单会报错
+            # 仅用于打开支付宝账单，打开微信、京东账单会报错
             df = pd.read_csv(csv_file_path, names=names, skiprows=0, encoding='gbk')
         except Exception as ex:
             # engine='python' 可以打开，但是中文是乱码 encoding='utf-8' 可以打开，中文正常
             df = pd.read_csv(csv_file_path, names=names, skiprows=0, engine='python', encoding='utf-8')
-        return 'read_csv_ok',df
+        return 'read_csv_ok', df
 
 
 # 通过tkinter选择文件，返回文件路径

@@ -6,11 +6,30 @@ from util import print_dog_head
 from util import read_paylist_file
 from util import check_first_column_contains_string
 from util import get_current_path
+from util import auto_calssify_by_keyword
 from util import load_html_to_classify_rule_list
 from wechat_paybill_convert import wechat_paybill_conv
 from ali_paybill_convert import ali_paybill_conv
-
+from modules.jindong_bill_convert import jindong_bill_conv
+import pandas as pd
+import os.path as op
 import warnings
+
+def init_df_columns(df, skiprows=0, use_column_name = True):
+    df = df.iloc[skiprows+1:]
+    first_row = df.iloc[0]
+    # 将第一行转换成字符串
+    new_column_names = [str(item) if item != "" else df.columns[idx] for idx, item in enumerate(first_row)]
+    # 设置新的列名
+    df.columns = new_column_names
+    print("导入原始账单")
+    print(new_column_names)
+    # 删除第一行，因为它已经被用作列名
+    df = df.drop(df.index[0])
+    # 重置索引
+    df.reset_index(drop=True, inplace=True)
+
+    return df
 
 def update_label_app(selected_value):
     label_app.config(text="选择配置账本: " + selected_value)
@@ -58,6 +77,20 @@ def paylist_convert(info_data):
         elif check_first_column_contains_string(df,"支付宝"):
             file_type = '支付宝'
             ali_paybill_conv(df,info_data)
+        elif check_first_column_contains_string(df,"京东账号"):
+            file_type = '京东'
+            df.fillna('', inplace=True)
+
+            df = init_df_columns(df, 18, True)
+            jindong_bill_conv(df,info_data)
+
+            # 根据关键字匹配，自动调整二级自动分类
+            df = auto_calssify_by_keyword(df, match_list_rule=info_data.classify_csv_rule)
+
+            #  导出随手记web 格式账单
+            with pd.ExcelWriter(op.join(get_current_path(), '随手记导入支付宝账单.xls')) as writer:
+                # 不保存序号
+                df.to_excel(writer, sheet_name='Sheet1', index=False)
         else:
             print("目前尚不支持的支付单格式")
 
