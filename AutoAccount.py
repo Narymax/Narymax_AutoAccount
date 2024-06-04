@@ -6,13 +6,10 @@ from util import print_dog_head
 from util import read_paylist_file
 from util import check_first_column_contains_string
 from util import get_current_path
-from util import auto_calssify_by_keyword
-from util import load_html_to_classify_rule_list
 from wechat_paybill_convert import wechat_paybill_conv
 from ali_paybill_convert import ali_paybill_conv
-from modules.jindong_bill_convert import jindong_bill_conv
-import pandas as pd
-import os.path as op
+from jindong_bill_convert import jindong_bill_conv
+import sys
 import warnings
 
 def init_df_columns(df, skiprows=0, use_column_name = True):
@@ -66,6 +63,7 @@ def create_config(info_data):
 def paylist_convert(info_data):
     file_type = ''
     flag, df = read_paylist_file()
+    dst_app = selected_value.get()
     if flag == 'no_file':
         print("读取支付单文件失败")
         window.mainloop()
@@ -82,15 +80,7 @@ def paylist_convert(info_data):
             df.fillna('', inplace=True)
 
             df = init_df_columns(df, 18, True)
-            jindong_bill_conv(df,info_data)
-
-            # 根据关键字匹配，自动调整二级自动分类
-            df = auto_calssify_by_keyword(df, match_list_rule=info_data.classify_csv_rule)
-
-            #  导出随手记web 格式账单
-            with pd.ExcelWriter(op.join(get_current_path(), '随手记导入支付宝账单.xls')) as writer:
-                # 不保存序号
-                df.to_excel(writer, sheet_name='Sheet1', index=False)
+            jindong_bill_conv(df,info_data,dst_app)
         else:
             print("目前尚不支持的支付单格式")
 
@@ -99,21 +89,26 @@ def paylist_convert(info_data):
 
 if __name__ == "__main__":
 
-    warnings.filterwarnings("ignore")
+    auto_account_version = 'V1.3'
 
     print("富强、民主、文明、和谐、自由、平等、公正、法治、爱国、敬业、诚信、友善")
-
     print_dog_head()
 
-    print("欢迎使用自动记账工具V1.2\n")
+    print("欢迎使用自动记账工具" + auto_account_version + "\n")
     print("目前只支持随手记，读取微信支付宝账单\n \n \n \n")
     print("教程：https://gitee.com/Naymax/Narymax_AutoAccount/blob/main/README.md")
+
+    if getattr(sys,'frozen',False):
+        # 程序在打包状态下运行，不打印警告
+        warnings.filterwarnings("ignore")
+    else:
+        pass
 
 
     # Create the main window
     window = tk.Tk()
-    window.title("Narymax AutoAccount V1.2")
-    window.geometry("300x180")
+    window.title("Narymax AutoAccount "+auto_account_version)
+    window.geometry("350x180")
 
     # Create a dropdown list
     options = [ "随手记",
@@ -156,7 +151,7 @@ if __name__ == "__main__":
     button_config_create = tk.Button(window, text="创建config文件", command=lambda: create_config(info_data))
     button_config_create.pack()
 
-    button_paylist_convert = tk.Button(window, text="微信、支付宝 账单一键转换", command=lambda: paylist_convert(info_data))
+    button_paylist_convert = tk.Button(window, text="微信、支付宝、京东 账单一键转换", command=lambda: paylist_convert(info_data))
     button_paylist_convert.pack()
 
     button_list = [button_paylist_convert,button_config_load,button_config_create]

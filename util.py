@@ -99,13 +99,15 @@ def replace_continue_number(df, colum_name, num=9, replace_char=''):
     return df
 
 
-def auto_calssify_by_keyword(df,first_classify_col='分类',second_classify_col='子分类', match_list_rule=[]):
+def auto_calssify_by_keyword(df,first_classify_col='分类',second_classify_col='子分类', match_list_rule=[], trade_type = '交易类型',redfund_income_classify = True):
     df[first_classify_col] = df[first_classify_col].astype(str)
     df[second_classify_col] = df[second_classify_col].astype(str)
     if match_list_rule is None:
         print('没有找到匹配模板')
         return df
     else:
+        outcome_autoclass_total_num = 0
+        income_autoclass_total_num = 0
         for list_vob in match_list_rule:
 
             # 使用列表推导式删除空字符串
@@ -116,31 +118,48 @@ def auto_calssify_by_keyword(df,first_classify_col='分类',second_classify_col=
             if len(list) <= 3:
                 continue
             else:
-                result = df['备注'].str.contains(list2orString(list[3:]))
+                # 支出自动分类
+                result = (df['备注'].str.contains(list2orString(list[3:]))) & (df[trade_type].str.contains('支'))
                 df.loc[result, first_classify_col] = first_class
                 df.loc[result, second_classify_col] = second_class
+                modified_outcome_rows = df.loc[result]
+                if not modified_outcome_rows.empty:
+                    df.loc[result, first_classify_col] = first_class
+                    df.loc[result, second_classify_col] = second_class
+                    outcome_autoclass_total_num += len(modified_outcome_rows)
+                    print("Modified outcome rows:")
+                    print(modified_outcome_rows)
+        print(f"Total modified outcome rows: {outcome_autoclass_total_num}")
+        print("\n \n ")
+
+        # 收入退款分类
+        if redfund_income_classify:
+            result = df[trade_type].str.contains('收') & df['备注'].str.contains('退款')
+            df.loc[result, first_classify_col] = "退款"
+            df.loc[result, second_classify_col] = "退款"
+            modified_income_rows = df.loc[result]
+            if not modified_income_rows.empty:
+                df.loc[result, first_classify_col] = "退款"
+                df.loc[result, second_classify_col] = "退款"
+                income_autoclass_total_num += len(modified_income_rows)
+                print("Modified income rows:")
+                print(modified_income_rows)
+
+        print(f"Total modified income rows: {income_autoclass_total_num}")
+        print("\n \n ")
         return df
 
 
-        # for match in match_list_rule:
-        #     # 一个match 是一个规则 list
-        #     # print(match)
-        #     # print(type(match))
-        #     # 分类
-        #     first_class = match[0]
-        #     # 子分类
-        #     second_class = match[1]
-        #     # 从第三个开始是【备注+关键词】
-        #     for m in match[2:]:
-        #         if len(m) == 1:
-        #             continue
-        #         else:
-        #             # 找匹配
-        #             result = df[m[0]].str.contains(list2orString(m[1:]))
-        #             df.loc[result, first_classify_col] = first_class
-        #             df.loc[result, second_classify_col] = second_class
-        #
-        # return df
+def add_count_prefix_character(df, account_name='', account_name2 ='',prefix_character=''):
+
+    if account_name != '':
+        # df[account_name] = prefix_character + df[account_name]
+        # 检查并添加前缀到 account_name 列
+        df[account_name] = df[account_name].apply(lambda x: prefix_character + x if x != '' else x)
+    if account_name2 != '':
+        df[account_name2] = df[account_name2].apply(lambda x: prefix_character + x if x != '' else x)
+    return df
+
 
 # ['He' ,'ui' ,'kk'] -> 'He|ui|kk'
 def list2orString(list):
@@ -161,7 +180,21 @@ def load_html_to_classify_rule_list(info_data,selected_value):
     if selected_value == "随手记":
         print("随手记")
 
+def init_df_columns(df, skiprows=0, use_column_name = True):
+    df = df.iloc[skiprows+1:]
+    first_row = df.iloc[0]
+    # 将第一行转换成字符串
+    new_column_names = [str(item) if item != "" else df.columns[idx] for idx, item in enumerate(first_row)]
+    # 设置新的列名
+    df.columns = new_column_names
+    print("导入原始账单")
+    print(new_column_names)
+    # 删除第一行，因为它已经被用作列名
+    df = df.drop(df.index[0])
+    # 重置索引
+    df.reset_index(drop=True, inplace=True)
 
+    return df
 
 
 def print_dog_head():

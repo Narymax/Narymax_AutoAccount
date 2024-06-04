@@ -67,6 +67,7 @@ class InfoClass:
                     self.classify_csv_rule.append(row)
 
         if not flag_configfile_exist_calssify_rule:
+            # 如果配置文件中没有分类规则，那么就用默认的空列表
             self.classify_csv_rule = []
 
 

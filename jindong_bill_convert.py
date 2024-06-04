@@ -1,31 +1,24 @@
 import pandas as pd
 # from helper import init_df_columns
-import os
 import sys
 # 将父目录加入 sys.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# parent_dir = os.path.dirname(current_dir)
+# sys.path.insert(0, parent_dir)
 from info_class import InfoClass
 from util import get_current_path
+from util import init_df_columns
+from util import auto_calssify_by_keyword
+from util import add_count_prefix_character
 import os.path as op
-def init_df_columns(df, skiprows=0, use_column_name = True):
-    df = df.iloc[skiprows+1:]
-    first_row = df.iloc[0]
-    # 将第一行转换成字符串
-    new_column_names = [str(item) if item != "" else df.columns[idx] for idx, item in enumerate(first_row)]
-    # 设置新的列名
-    df.columns = new_column_names
-    print("导入原始账单")
-    print(new_column_names)
-    # 删除第一行，因为它已经被用作列名
-    df = df.drop(df.index[0])
-    # 重置索引
-    df.reset_index(drop=True, inplace=True)
+from datetime import datetime
 
-    return df
 
-def jindong_bill_conv(df,info_data):
+def jindong_bill_conv(df,info_data,dst_app = '随手记'):
+
+    # df 列说明
+    # 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
+    # 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
 
     # 剔除京东与微信支付重复导出的账单
     df = df.drop(df[df['收/付款方式'] == '微信支付'].index)  # 删除指定行
@@ -48,8 +41,11 @@ def jindong_bill_conv(df,info_data):
         .rename(columns={"secondClassName_values": "二级分类名称", "account2_values": "*账户", "user_values": "成员", "paymentMethod_values": "支付渠道", "projectName_values": "项目"})  # 将 Delta 列名修改为 得尔塔
         .reindex(columns=["交易类型", "日期", "一级分类名称", "二级分类名称", "账户", "*账户", "金额", "成员", "支付渠道", "项目","备注","交易说明","商户名称"])
     )
+    print("完成标准模板转换")
+    # 变成标准模板
+    # | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
 
-    # 筛选还京东白条  不计收支 -> 转账 （类似还信用卡）
+    # 筛选还京东白条  交易类型： 不计收支 -> 转账 （类似还信用卡）
     condition_jindongcrediet = (df['交易类型'] == '不计收支') & (df['交易说明'] == '白条主动还款') & (df['商户名称'] == '京东金融')
     df.loc[condition_jindongcrediet, '交易类型'] = "转账"
     df.loc[condition_jindongcrediet, '账户'] = df.loc[condition_jindongcrediet, '账户'] + "还白条"
@@ -60,18 +56,35 @@ def jindong_bill_conv(df,info_data):
     df.loc[condition_cashout, '账户'] = '京东钱包余额'
     df.loc[condition_cashout,'*账户'] = '京东提现账户'
 
-    # 一步完成列名修改、增加新列和重新排序
-    df = (
-        df.rename(columns={"一级分类名称":"分类","二级分类名称":"子分类","账户": "账户1","*账户": "账户2"})
-        .reindex(columns=['交易类型', '日期', '分类', '子分类', '账户1', '账户2', '金额', '成员', '商家', '项目', '备注'])
-    )
+    # 支出自动分类
+    df = auto_calssify_by_keyword(df,first_classify_col='一级分类名称',second_classify_col='二级分类名称',match_list_rule=info_data.classify_csv_rule)
+
+    # 默认支出项目名称
+    if info_data.default_proj_name != '':
+        condition_default_payout_proj = (df['交易类型'] == '支出')
+        df.loc[condition_default_payout_proj,'项目'] = info_data.default_proj_name
+
+    # 账户前面加 字母编号
+    # 银行卡 -> M银行卡
+    df = add_count_prefix_character(df, '账户', '*账户',info_data.character)
 
 
+    # 变成指定app 模板
+    if dst_app == '随手记':
+        # 一步完成列名修改、增加新列和重新排序
+        df = (
+            df.rename(columns={"一级分类名称":"分类","二级分类名称":"子分类","账户": "账户1","*账户": "账户2","支付渠道":"商家"})
+            .reindex(columns=['交易类型', '日期', '分类', '子分类', '账户1', '账户2', '金额', '成员', '商家', '项目', '备注'])
+        )
+        print("完成 " + dst_app + "账单适配")
 
 
+    file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+ dst_app + '导入京东账单.xls'
+    with pd.ExcelWriter(op.join(get_current_path(), file_name)) as writer:
+        # 不保存序号
+        df.to_excel(writer, sheet_name='Sheet1', index=False)
 
-    return df
-
+    print("导出文件完成: " + op.join(get_current_path(), file_name))
 
 
 
@@ -97,9 +110,9 @@ if __name__ == "__main__":
     userInfo.load_config_file(xls_path)
     df = jindong_bill_conv(df,userInfo)
     #  导出随手记web 格式账单
-    with pd.ExcelWriter(op.join(get_current_path(), '随手记导入京东账单.xls')) as writer:
-        # 不保存序号
-        df.to_excel(writer, sheet_name='Sheet1', index=False)
+    # with pd.ExcelWriter(op.join(get_current_path(), '随手记导入京东账单.xls')) as writer:
+    #     # 不保存序号
+    #     df.to_excel(writer, sheet_name='Sheet1', index=False)
 
 
 
