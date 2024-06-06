@@ -8,6 +8,8 @@ from util import check_first_column_contains_string
 from util import get_current_path
 from wechat_paybill_convert import wechat_paybill_conv
 from ali_paybill_convert import ali_paybill_conv
+from wechat_paybill_convert import wechat_paybill_conv_dev
+from ali_paybill_convert import ali_paybill_conv_dev
 from jindong_bill_convert import jindong_bill_conv
 import sys
 import warnings
@@ -63,6 +65,7 @@ def create_config(info_data):
 def paylist_convert(info_data):
     file_type = ''
     flag, df = read_paylist_file()
+    # 获取当前下拉选择记账app 名称
     dst_app = selected_value.get()
     if flag == 'no_file':
         print("读取支付单文件失败")
@@ -71,10 +74,16 @@ def paylist_convert(info_data):
     else:
         if df.at[0, 'A'].find('微信') != -1:
             file_type = '微信'
-            wechat_paybill_conv(df, info_data)
+            df.fillna('', inplace=True)
+            # wechat_paybill_conv(df, info_data)
+            df = init_df_columns(df, 15, True)
+            wechat_paybill_conv_dev(df, info_data,dst_app)
         elif check_first_column_contains_string(df,"支付宝"):
             file_type = '支付宝'
-            ali_paybill_conv(df,info_data)
+            df.fillna('', inplace=True)
+            # ali_paybill_conv(df,info_data)
+            df = init_df_columns(df, 21, True)
+            ali_paybill_conv_dev(df, info_data,dst_app)
         elif check_first_column_contains_string(df,"京东账号"):
             file_type = '京东'
             df.fillna('', inplace=True)
@@ -86,6 +95,7 @@ def paylist_convert(info_data):
 
         button_paylist_convert.config(text="转换" + file_type + "账单完成！继续点击转换！")
         window.mainloop()
+        return
 
 if __name__ == "__main__":
 
@@ -95,7 +105,7 @@ if __name__ == "__main__":
     print_dog_head()
 
     print("欢迎使用自动记账工具" + auto_account_version + "\n")
-    print("目前只支持随手记，读取微信支付宝账单\n \n \n \n")
+    print("目前支持随手记 读取 微信、支付宝、京东 账单\n \n \n \n")
     print("教程：https://gitee.com/Naymax/Narymax_AutoAccount/blob/main/README.md")
 
     if getattr(sys,'frozen',False):

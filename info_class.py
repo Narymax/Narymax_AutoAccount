@@ -18,10 +18,12 @@ class InfoClass:
         self.min_pay_filter = 0.1
         self.default_proj_name = "家庭支出"
         self.character = "M"
-        self.use_suggestion_classify = True
-        self.redacte_show_string = "****"
+        self.use_suggestion_classify = True  # 没有分类规则的使用账单自带的分类标签
+        self.redacte_show_string = "****"  # 屏蔽交易号
         self.match_list_rule = []   # 旧版本 ，使用两个yaml
-        self.classify_csv_rule = []  # 新版本，使用一个csv
+        self.classify_csv_rule = []  # 新版本，使用一个xls  支出分类规则
+        self.income_classify_csv_rule = []  # 新版本，使用一个xls  收入分类规则 默认捕捉关键字退款，把一级分类、二级分类都变成 退款 ['收入分类规则','退款','退款','退款']
+        self.transfer_classify_csv_rule = []  # 新版本，使用一个xls  转账分类规则
 
     def load_config_file_from_tk_window(self):
         file_path = select_file_from_tk(file_extension = '.xls',show_title = '请选择配置文件 xls类型')
@@ -41,6 +43,8 @@ class InfoClass:
             rows_as_lists.append(row_list)
         self.classify_csv_rule = []
         flag_configfile_exist_calssify_rule = False
+        flag_income_configfile_exist_calssify_rule = False
+        flag_transfer_configfile_exist_calssify_rule = False
         for row in rows_as_lists:
             parameter = row[0]
             value = row[1]
@@ -61,14 +65,26 @@ class InfoClass:
                 self.default_proj_name = str(value)
             if 'redacte_show_string' in str(parameter):
                 self.redacte_show_string = str(value)
-            if '分类规则' in str(parameter):
+            if '支出分类规则' in str(parameter):
                 if str(value) != '':
                     flag_configfile_exist_calssify_rule = True
                     self.classify_csv_rule.append(row)
+            if '收入分类规则' in str(parameter):
+                if str(value) != '':
+                    flag_income_configfile_exist_calssify_rule = True
+                    self.income_classify_csv_rule.append(row)
+            if '转账分类规则' in str(parameter):
+                if str(value) != '':
+                    flag_transfer_configfile_exist_calssify_rule = True
+                    self.transfer_classify_csv_rule.append(row)
 
         if not flag_configfile_exist_calssify_rule:
             # 如果配置文件中没有分类规则，那么就用默认的空列表
             self.classify_csv_rule = []
+        if not flag_income_configfile_exist_calssify_rule:
+            self.income_classify_csv_rule = []
+        if not flag_transfer_configfile_exist_calssify_rule:
+            self.transfer_classify_csv_rule = []
 
 
     def get_user_info_from_yaml(self, yaml_path):
@@ -107,8 +123,18 @@ class InfoClass:
             [""]
         ]
         if self.classify_csv_rule != []:
-            data.append(['', '第一级分类名称', '第二级分类名称', '关键字'])
+            data.append(['', '第一级分类名称', '第二级分类名称', '支出关键字','...','...'])
             for row in self.classify_csv_rule:
+                data.append(row)
+
+        if self.income_classify_csv_rule != []:
+            data.append(['', '第一级分类名称', '第二级分类名称', '收入关键字','...','...'])
+            for row in self.income_classify_csv_rule:
+                data.append(row)
+
+        if self.transfer_classify_csv_rule != []:
+            data.append(['', '第一级分类名称', '第二级分类名称', '转账关键字','...','...'])
+            for row in self.transfer_classify_csv_rule:
                 data.append(row)
 
         # 初始列名
@@ -233,16 +259,16 @@ class InfoClass:
 
         # 适配csv
         # [
-        #     ['分类规则','一级分类','二级分类'],
-        #     ['分类规则','一级分类','二级分类'],
-        #     ['分类规则','一级分类','二级分类'],
+        #     ['支出分类规则','一级分类','二级分类'],
+        #     ['支出分类规则','一级分类','二级分类'],
+        #     ['支出分类规则','一级分类','二级分类'],
         # ]
         list_csv_list = []
         for firstClass, value in my_dict.items():
             for secondClass in value:
                 # 第二层
                 tempt_list_sec = []
-                tempt_list_sec.append('分类规则')
+                tempt_list_sec.append('支出分类规则')
                 tempt_list_sec.append(firstClass)
                 tempt_list_sec.append(secondClass)
 

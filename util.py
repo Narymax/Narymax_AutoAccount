@@ -73,7 +73,7 @@ def redacte_key_number(df,colum_name,dedacte_phone_number=False,redacte_trade_nu
         df[~mask] = replace_continue_number(df[~mask],colum_name,replace_char=redacte_show_char)
         return df
 
-#  提取包含手机的mask
+#  正则提取包含手机的mask
 def extract_phone(df,column_name):
 
         pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
@@ -194,6 +194,16 @@ def init_df_columns(df, skiprows=0, use_column_name = True):
     # 重置索引
     df.reset_index(drop=True, inplace=True)
 
+    return df
+
+# 使用正则表达式从'账户'列提取"&YYY"格式的字符串
+# 将提取出的字符串加到'备注'列的对应行后面
+# 从'账户'列删除"&YYY"格式的字符串
+def cut_df_Acol_tails_to_Bcol(df,Acol_name='账户',Bcol_name='备注', sep='&'):
+    df['extracted'] = df[Acol_name].str.extract(r'(&\w+)$')
+    df[Bcol_name] = df[Bcol_name].str.cat(df['extracted'].fillna(''), sep='')
+    df[Acol_name] = df[Acol_name].str.replace(r'&\w+$', '')
+    df.drop('extracted', axis=1, inplace=True)
     return df
 
 

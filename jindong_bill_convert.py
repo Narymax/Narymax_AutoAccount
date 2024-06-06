@@ -10,6 +10,7 @@ from util import get_current_path
 from util import init_df_columns
 from util import auto_calssify_by_keyword
 from util import add_count_prefix_character
+from util import redacte_key_number
 import os.path as op
 from datetime import datetime
 
@@ -55,6 +56,12 @@ def jindong_bill_conv(df,info_data,dst_app = '随手记'):
     df.loc[condition_cashout, '交易类型'] = '转账'
     df.loc[condition_cashout, '账户'] = '京东钱包余额'
     df.loc[condition_cashout,'*账户'] = '京东提现账户'
+
+    # 屏蔽敏感交易号
+    df = redacte_key_number(df, '备注', redacte_show_char="****")
+
+    # 小金额筛除的
+    df.drop(df[df['金额'].astype('float') < info_data.min_pay_filter].index, inplace=True)
 
     # 支出自动分类
     df = auto_calssify_by_keyword(df,first_classify_col='一级分类名称',second_classify_col='二级分类名称',match_list_rule=info_data.classify_csv_rule)

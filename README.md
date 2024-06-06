@@ -14,7 +14,7 @@
 ![](res/diagram/diagram.png)
 
 ## 更新状态
-AutoAccount_V1.2
+AutoAccount_V1.3
 - 支持微信、支付宝账单到随手记的适配
 
 ## 数据提取支持功能
@@ -35,15 +35,15 @@ AutoAccount_V1.2
 下载relese文件夹下面的[rumMain.exe](release/AutoAccount.exe)，放到英文路径下面 
 
 ## 使用方法
-1. 导出微信、支付宝原始账单，准备csv账单（手机可以操作）</br>
-参考教程：
-[微信账单导出](https://docs.qianjiapp.com/other/import_guide_weixin.html)
-[手机支付宝账单导出](https://docs.qianjiapp.com/other/import_guide_alipay_app.html)
-2. 下载AutoAccount转换软件,点击一键转换 </br>
+1. 导出微信、支付宝原始账单，准备csv账单（手机可以操作）  
+参考教程：  
+[微信账单导出](https://docs.qianjiapp.com/other/import_guide_weixin.html)  
+[手机支付宝账单导出](https://docs.qianjiapp.com/other/import_guide_alipay_app.html)  
+2. 下载AutoAccount转换软件,点击一键转换   
 
-[![pic](res/img/ico.png)](release/AutoAccount.exe) 
-</br>
-![](res/img/mainwindow_V1.2.png)
+[![pic](res/img/ico.png)](release/AutoAccount.exe)   
+
+![](res/img/mainwindow_V1.2.png)  
 3. [从软件路径下找到转换账单，上传记账软件](#记账app适配更新状态)
 
 ## 其它功能介绍
@@ -59,21 +59,15 @@ AutoAccount_V1.2
 * 老鸽开发中 ⭕
 * 鸽了 🦆
 
-| 记账app    | pic                                                 | 支持状态  |
-|----------|-----------------------------------------------------|-----|
-| [随手记](doc/sui.md)  | [![pic](res/img100x100/随手记-记账就用随手记.png)](doc/sui.md) | ✔   |
- | Timi时光记账 | ![pic](res/img100x100/Timi时光记账.png)                 | 🦆  |
- | 口袋记账     | ![pic](res/img100x100/口袋记账-懂记账会生活.png)              | 🦆  |
- | 可萌记账     | ![pic](res/img100x100/可萌记账Plus-简单好用的记账软件.png)       | 🦆  |
- | 挖财记账     | ![pic](res/img100x100/挖财记账-好用的存钱记账软件.png)           | 🦆  |
- | 有鱼记账     | ![pic](res/img100x100/有鱼记账-记账本软件.png)               | 🦆  |
- | 松鼠记账     | ![pic](res/img100x100/松鼠记账-极速记账软件财务管家.png)          | 🦆  |
- | 洋葱记账     | ![pic](res/img100x100/洋葱记账-超简单的安全理财记账软件.png)        | 🦆  |
- | 百事AA记账   | ![pic](res/img100x100/百事AA记账-多人智能记账APP，云记账更安全.png)  | 🦆  |
- | 薄荷记账     | ![pic](res/img100x100/薄荷记账-记账本软件.png)               | 🦆  |
- | 记账·海豚记账本 | ![pic](res/img100x100/记账·海豚记账本：极简记账软件.png)          | 🦆  |
- | 钱迹       | ![pic](res/img100x100/钱迹-存钱记账小能手.png)               | ⭕   |
- | 鲨鱼记账     | ![pic](res/img100x100/鲨鱼记账-3秒钟快速记账手机助手.png)         | 🦆  |
+| 记账app    | pic                   | 支持状态    |记账app    | pic                 | 支持状态  |
+|----------|----------------------------------|---------|---------|--------------------------|-----|
+| [随手记](doc/sui.md)  | [![pic](res/img100x100/随手记-记账就用随手记.png)](doc/sui.md) | ✔       |松鼠记账     | ![pic](res/img100x100/松鼠记账-极速记账软件财务管家.png)          | 🦆  |
+ | Timi时光记账 | ![pic](res/img100x100/Timi时光记账.png)                 | 🦆      |洋葱记账     | ![pic](res/img100x100/洋葱记账-超简单的安全理财记账软件.png)        | 🦆  |
+ | 口袋记账     | ![pic](res/img100x100/口袋记账-懂记账会生活.png)              | 🦆      |百事AA记账   | ![pic](res/img100x100/百事AA记账-多人智能记账APP，云记账更安全.png)  | 🦆  |
+ | 可萌记账     | ![pic](res/img100x100/可萌记账Plus-简单好用的记账软件.png)       | 🦆      | 薄荷记账     | ![pic](res/img100x100/薄荷记账-记账本软件.png)               | 🦆  |
+ | 挖财记账     | ![pic](res/img100x100/挖财记账-好用的存钱记账软件.png)           | 🦆      |记账·海豚记账本 | ![pic](res/img100x100/记账·海豚记账本：极简记账软件.png)          | 🦆  |
+ | 有鱼记账     | ![pic](res/img100x100/有鱼记账-记账本软件.png)               | 🦆      |钱迹       | ![pic](res/img100x100/钱迹-存钱记账小能手.png)               | ⭕   |
+ | 鲨鱼记账     | ![pic](res/img100x100/鲨鱼记账-3秒钟快速记账手机助手.png)         | 不支持模板导入 |
 
 
 ## 欢迎更多老鸽来 PR
@@ -84,16 +78,25 @@ python 3.6.15
 [环境依赖](requirements.txt)
 
 ## 配置文件说明
-config.yaml
+config.xls
 - user: 用户名字，记账人 
-- character: 通常就是字母，会添加到付款账号的前面，作为用户账户的一个标记
+- character: 通常就是字母，会添加到付款账号的前面，作为用户账户的一个标记，不需要可以不填
 - min_pay_filter: 低于指定金额的不记账
 - default_proj_name: 默认项目名称
 
 ### 标准账单模板
-![img.png](res/img/img.png)
-
+[![img.png](res/img/img.png)](doc/标准账单.md)
 
 [标准账单](doc/标准账单.md)
 ## 关于项目
 本项目是个人记账使用的小软件，目前界面还很毛坯，持续优化中
+
+## 更新日志
+
+注：使用pyinstaller 打包
+### 2024-05-21
+交易号屏蔽（超过9位），但是保留手机号码
+### 2024-05-22
+更新UI
+### 2024-06-06
+更新京东账单适配，分类关键字匹配规则细化为，支出分类模板、收入分类模板
