@@ -9,6 +9,7 @@ from util import get_current_path
 from collections import OrderedDict
 from bs4 import BeautifulSoup
 from datetime import datetime
+import math
 
 # 用户配置类
 # 查看测试用例
@@ -28,10 +29,17 @@ class InfoClass:
     def load_config_file_from_tk_window(self):
         file_path = select_file_from_tk(file_extension = '.xls',show_title = '请选择配置文件 xls类型')
         self.load_config_file(file_path)
+        if file_path=='':
+            return "user abort select"
+        else:
+            return "load .xls"
 
     def load_config_file(self,xls_path):
 
-        print(os.path.exists(xls_path))  # True 表示文件路径正确
+        if xls_path == '':
+            return
+
+        print("检查配置文件路径存在性： ",os.path.exists(xls_path))  # True 表示文件路径正确
 
         # xlrd 读取xls,xlsx读取失败，应该是pandas版本不对 pandas/io/excel.py报错
         df = pd.read_excel(xls_path, engine='xlrd')
@@ -56,13 +64,23 @@ class InfoClass:
             if 'user' in str(parameter):
                 self.user = str(value)
             if 'character' in str(parameter):
-                self.character = str(value)
+                if isinstance(value, float) and math.isnan(value):
+                    # 处理 flat 的value 是nan,变成'nan'
+                    value_str = ''
+                else:
+                    value_str = str(value)
+                self.character = value_str
             if 'min_pay_filter' in str(parameter):
                 self.min_pay_filter = float(value)
             if 'use_suggertion_classify' in str(parameter):
                 self.use_suggertion_classify = bool(value)
             if 'default_proj_name' in str(parameter):
-                self.default_proj_name = str(value)
+                if isinstance(value, float) and math.isnan(value):
+                    # 处理 flat 的value 是nan,变成'nan'
+                    value_str = ''
+                else:
+                    value_str = str(value)
+                self.default_proj_name = value_str
             if 'redacte_show_string' in str(parameter):
                 self.redacte_show_string = str(value)
             if '支出分类规则' in str(parameter):

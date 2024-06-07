@@ -1,26 +1,20 @@
 import pandas as pd
-# from helper import init_df_columns
-import sys
-# 将父目录加入 sys.path
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# parent_dir = os.path.dirname(current_dir)
-# sys.path.insert(0, parent_dir)
 from info_class import InfoClass
-from util import get_current_path
 from util import init_df_columns
 from util import auto_calssify_by_keyword
 from util import add_count_prefix_character
 from util import redacte_key_number
-import os.path as op
-from datetime import datetime
+from util import write_dst_template_file
 
 
-def jindong_bill_conv(df,info_data,dst_app = '随手记'):
 
-    # df 列说明
-    # 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
-    # 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
-
+# df 列说明
+# 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
+# 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
+# 变成标准模板 +  "交易说明","商户名称"
+# | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
+#  最后2列是自定义的
+def convert_jindong_bill_to_standard_accountlist(df,info_data):
     # 剔除京东与微信支付重复导出的账单
     df = df.drop(df[df['收/付款方式'] == '微信支付'].index)  # 删除指定行
     df = df.drop(df[df['交易状态'] != '交易成功'].index)  # 删除交易没有成功的账单
@@ -43,9 +37,10 @@ def jindong_bill_conv(df,info_data,dst_app = '随手记'):
         .reindex(columns=["交易类型", "日期", "一级分类名称", "二级分类名称", "账户", "*账户", "金额", "成员", "支付渠道", "项目","备注","交易说明","商户名称"])
     )
     print("完成标准模板转换")
-    # 变成标准模板
-    # | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
 
+    return df
+
+def jindong_papbill_auto_classify(df,info_data):
     # 筛选还京东白条  交易类型： 不计收支 -> 转账 （类似还信用卡）
     condition_jindongcrediet = (df['交易类型'] == '不计收支') & (df['交易说明'] == '白条主动还款') & (df['商户名称'] == '京东金融')
     df.loc[condition_jindongcrediet, '交易类型'] = "转账"
@@ -67,7 +62,7 @@ def jindong_bill_conv(df,info_data,dst_app = '随手记'):
     df = auto_calssify_by_keyword(df,first_classify_col='一级分类名称',second_classify_col='二级分类名称',match_list_rule=info_data.classify_csv_rule)
 
     # 默认支出项目名称
-    if info_data.default_proj_name != '':
+    if (info_data.default_proj_name != ''):
         condition_default_payout_proj = (df['交易类型'] == '支出')
         df.loc[condition_default_payout_proj,'项目'] = info_data.default_proj_name
 
@@ -75,23 +70,45 @@ def jindong_bill_conv(df,info_data,dst_app = '随手记'):
     # 银行卡 -> M银行卡
     df = add_count_prefix_character(df, '账户', '*账户',info_data.character)
 
+    return df
 
-    # 变成指定app 模板
-    if dst_app == '随手记':
-        # 一步完成列名修改、增加新列和重新排序
-        df = (
-            df.rename(columns={"一级分类名称":"分类","二级分类名称":"子分类","账户": "账户1","*账户": "账户2","支付渠道":"商家"})
-            .reindex(columns=['交易类型', '日期', '分类', '子分类', '账户1', '账户2', '金额', '成员', '商家', '项目', '备注'])
-        )
-        print("完成 " + dst_app + "账单适配")
+def jindong_bill_conv(df,info_data,dst_app = '随手记'):
+
+    # df 列说明
+    # 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
+    # 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
+
+    # 变成标准模板 +  "交易说明","商户名称"
+    # | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
+    #  最后2列是自定义的
+
+    df = convert_jindong_bill_to_standard_accountlist(df,info_data)
+
+    # 自动分类，对标准模板进行数据处理
+    df = jindong_papbill_auto_classify(df,info_data)
+
+    # 写入指定app 模板
+    write_dst_template_file(df, src_name='京东', dst_app_name=dst_app)
+
+    return
 
 
-    file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+ dst_app + '导入京东账单.xls'
-    with pd.ExcelWriter(op.join(get_current_path(), file_name)) as writer:
-        # 不保存序号
-        df.to_excel(writer, sheet_name='Sheet1', index=False)
-
-    print("导出文件完成: " + op.join(get_current_path(), file_name))
+    # # 变成指定app 模板
+    # if dst_app == '随手记':
+    #     # 一步完成列名修改、增加新列和重新排序
+    #     df = (
+    #         df.rename(columns={"一级分类名称":"分类","二级分类名称":"子分类","账户": "账户1","*账户": "账户2","支付渠道":"商家"})
+    #         .reindex(columns=['交易类型', '日期', '分类', '子分类', '账户1', '账户2', '金额', '成员', '商家', '项目', '备注'])
+    #     )
+    #     print("完成 " + dst_app + "账单适配")
+    #
+    #
+    # file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+ dst_app + '导入京东账单.xls'
+    # with pd.ExcelWriter(op.join(get_current_path(), file_name)) as writer:
+    #     # 不保存序号
+    #     df.to_excel(writer, sheet_name='Sheet1', index=False)
+    #
+    # print("导出文件完成: " + op.join(get_current_path(), file_name))
 
 
 

@@ -6,8 +6,6 @@ from util import print_dog_head
 from util import read_paylist_file
 from util import check_first_column_contains_string
 from util import get_current_path
-from wechat_paybill_convert import wechat_paybill_conv
-from ali_paybill_convert import ali_paybill_conv
 from wechat_paybill_convert import wechat_paybill_conv_dev
 from ali_paybill_convert import ali_paybill_conv_dev
 from jindong_bill_convert import jindong_bill_conv
@@ -41,9 +39,14 @@ def update_label_app(selected_value):
 
 
 def load_config(info_data):
-    info_data.load_config_file_from_tk_window()
+    load_result = info_data.load_config_file_from_tk_window()
     label_user.config(text=info_data.user)
-    button_config_load.config(text="加载配置文件完成！继续点击覆盖当前配置文件！")
+
+    if load_result == "load .xls":
+        button_config_load.config(text="加载配置文件完成！继续点击覆盖当前配置文件！")
+    elif load_result == "user abort select":
+        pass
+
     window.mainloop()
 
 

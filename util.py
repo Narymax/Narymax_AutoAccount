@@ -3,10 +3,10 @@ import os
 import tkinter as tk
 from tkinter import filedialog
 import sys
-
+import os.path as op
 import numpy as np
 import pandas as pd
-
+from datetime import datetime
 
 #  兼容打包后程序的路径读取
 def get_current_path():
@@ -58,7 +58,6 @@ def select_file_from_tk(file_extension = '',show_title = '请选择文件'):
         print("Error selecting file:", e)
         file_path = None
 
-    root.quit()
     return file_path
 
 
@@ -152,12 +151,14 @@ def auto_calssify_by_keyword(df,first_classify_col='分类',second_classify_col=
 
 def add_count_prefix_character(df, account_name='', account_name2 ='',prefix_character=''):
 
-    if account_name != '':
-        # df[account_name] = prefix_character + df[account_name]
-        # 检查并添加前缀到 account_name 列
-        df[account_name] = df[account_name].apply(lambda x: prefix_character + x if x != '' else x)
-    if account_name2 != '':
-        df[account_name2] = df[account_name2].apply(lambda x: prefix_character + x if x != '' else x)
+    if prefix_character != '':
+        if account_name != '':
+            # df[account_name] = prefix_character + df[account_name]
+            # 检查并添加前缀到 account_name 列
+            df[account_name] = df[account_name].apply(lambda x: prefix_character + x if x != '' else x)
+        if account_name2 != '':
+            df[account_name2] = df[account_name2].apply(lambda x: prefix_character + x if x != '' else x)
+
     return df
 
 
@@ -206,6 +207,95 @@ def cut_df_Acol_tails_to_Bcol(df,Acol_name='账户',Bcol_name='备注', sep='&')
     df.drop('extracted', axis=1, inplace=True)
     return df
 
+def match_phone_number():
+    # 匹配手机号
+    # 创建示例数据
+    data = {'ID': [1, 2, 3, 4, 5],
+            'column_name': ['abc123456789def', '12345678900', 'xyz456789', '123456789012', '15995705685']}
+    df = pd.DataFrame(data)
+
+    # 使用正则表达式筛选出含有连续11位数字的行
+    pattern = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字
+    mask = df['column_name'].str.contains(pattern, regex=True)
+    filtered_rows = df[mask]
+
+    # 输出结果
+    print(filtered_rows)
+
+
+def delete_much_than_9_nums():
+    # 创建示例数据
+    data = {'ID': [1, 2, 3, 4],
+            'column_name': ['abc123456789def', '12345678900', 'xyz456789', '123456789012']}
+    df = pd.DataFrame(data)
+
+    # 删除连续出现9位及以上数字的行
+    pattern = r'\d{9,}'  # 匹配连续出现9位及以上数字
+    df['column_name'] = df['column_name'].str.replace(pattern, '')  # 将匹配到的数字替换为空字符串
+    filtered_rows = df[df['column_name'].str.len() > 0]  # 筛选出替换后不为空的行
+
+    # 输出结果
+    print(filtered_rows)
+
+
+#  提取包含手机的mask
+def extract_phone(df, column_name):
+    pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
+    mask_middle = df[column_name].str.contains(pattern_middle, regex=True)
+    pattern_begin = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配从头开始连续11位数字 1731234567aa
+    mask_begin = df[column_name].str.contains(pattern_begin, regex=True)
+    pattern_end = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字然后结束  aabb1731234567
+    mask_end = df[column_name].str.contains(pattern_end, regex=True)
+    mask = mask_middle | mask_begin | mask_end
+    print("phone number extracted\n")
+    print(df[mask])
+    return mask
+
+
+def replace_continue_number(df, colum_name, num=9, replace_char=''):
+    pattern = r'(\d{{{0},}})'.format(num)  # 匹配连续出现num位及以上数字
+    # 提取连续出现num位及以上数字的行
+    matches = df[colum_name].str.extractall(pattern)
+    print(matches)  # 打印匹配的结果
+
+    df[colum_name] = df[colum_name].str.replace(pattern, replace_char)
+    print("消除连续出现", num, "位及以上的数字，并且替换成\" ", replace_char, "\"\n")
+    return df
+
+
+# 屏蔽交易号 （默认不屏蔽手机号）
+# 交易号判定，连续数字大于9个,(含有手机号的需要超过11个)
+def redacte_key_number(df, colum_name, dedacte_phone_number=False, redacte_trade_number=True, redacte_show_char=''):
+    # 含有手机号码的匹配行
+    mask = extract_phone(df, colum_name)
+    df[mask] = replace_continue_number(df[mask], colum_name, num=12, replace_char=redacte_show_char)
+
+    # 不含有手机号码的行
+    df[~mask] = replace_continue_number(df[~mask], colum_name, replace_char=redacte_show_char)
+    return df
+
+
+def write_dst_template_file(df, src_name, dst_app_name):
+    # 变成指定app 模板
+    if dst_app_name == '随手记':
+        # 一步完成列名修改、增加新列和重新排序
+        df = (
+            df.rename(columns={"一级分类名称": "分类", "二级分类名称": "子分类", "账户": "账户1", "*账户": "账户2",
+                               "支付渠道": "商家"})
+            .reindex(columns=['交易类型', '日期', '分类', '子分类', '账户1', '账户2', '金额', '成员', '商家', '项目',
+                              '备注'])
+        )
+        print("完成 " + dst_app_name + "账单适配")
+
+    file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name +'.xls'
+    with pd.ExcelWriter(op.join(str(get_current_path()), file_name)) as writer:
+        # 不保存序号
+        df.to_excel(writer, sheet_name='Sheet1', index=False)
+
+    print("导出文件完成: " + op.join(str(get_current_path()), file_name))
+
+    print("")
+    return
 
 def print_dog_head():
     print("\n\
@@ -242,3 +332,13 @@ def print_dog_head():
                ,,,     ,,:,::::::i:iiiii:i::::,, ::::iiiir@xingjief.r;7:i,\n\
             , , ,,,:,,::::::::iiiiiiiiii:,:,:::::::::iiir;ri7vL77rrirri::\n\
              :,, , ::::::::i:::i:::i:i::,,,,,:,::i:i:::iir;@Secbone.ii:::")
+
+if __name__ == '__main__':
+
+
+        data = {'ID': [1, 2, 3, 4,5,6,7],
+                'column_name': ['abc123456789def', '12345678900', 'xyz456789', '123456789012','15995705685#154546464875643434','er15995700000sd','01234567']}
+        df = pd.DataFrame(data)
+        df = redacte_key_number(df,'column_name',redacte_show_char="****")
+        print(df)
+        print("test")
