@@ -97,6 +97,7 @@ def wechat_paybill_conv_dev(df, info_data, dst_app):
 if __name__ == "__main__":
     wechat_file_path = "D:\\Roots\\2024-05-17github_narymax_AutoAccount\\Narymax_AutoAccount\\testdata\\微信支付账单(20240322-20240514)快乐小猴的日常微信账单_wechat.csv"
     wechat_file_path =  "D:\\Roots\\2024-01-29pay_list_csv_import\\my_personal_data\\微信支付账单(20240513-20240602)\\微信支付账单(20240513-20240602).csv"
+    wechat_file_path = "E:\\Root\\2024-01-29pay_list_csv_import\\csv_file\sun\\微信支付账单(20231231-20240131).csv"
     names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
     try:
         # 仅用于打开支付宝账单，打开微信、京东账单会报错
@@ -110,10 +111,13 @@ if __name__ == "__main__":
     df = init_df_columns(df,15,True)
 
     userInfo =  InfoClass(user="小明")
-    xls_path = "D:\\Roots\\2024-01-29pay_list_csv_import\\my_personal_data\\config\\config.xls"
-    userInfo.load_config_file(xls_path)
+    # xls_path = "D:\\Roots\\2024-01-29pay_list_csv_import\\my_personal_data\\config\\config.xls"
+    # userInfo.load_config_file(xls_path)
 
-    wechat_paybill_conv_dev(df,userInfo,"随手记")
+    # wechat_paybill_conv_dev(df,userInfo,"钱迹")
+    # wechat_paybill_conv_dev(df,userInfo,"有鱼记账")
+    wechat_paybill_conv_dev(df, userInfo, "挖财记账")
+
 
 
     print("")

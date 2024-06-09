@@ -130,8 +130,8 @@ if __name__ == "__main__":
     df = init_df_columns(df,18,True)
 
     userInfo =  InfoClass(user="小明")
-    xls_path = "D:\\Roots\\2024-01-29pay_list_csv_import\\my_personal_data\\config\\config.xls"
-    userInfo.load_config_file(xls_path)
+    # xls_path = "D:\\Roots\\2024-01-29pay_list_csv_import\\my_personal_data\\config\\config.xls"
+    # userInfo.load_config_file(xls_path)
     df = jindong_bill_conv(df,userInfo)
     #  导出随手记web 格式账单
     # with pd.ExcelWriter(op.join(get_current_path(), '随手记导入京东账单.xls')) as writer:

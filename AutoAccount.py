@@ -30,7 +30,7 @@ def init_df_columns(df, skiprows=0, use_column_name = True):
 
 def update_label_app(selected_value):
     label_app.config(text="选择配置账本: " + selected_value)
-    if selected_value == "随手记":
+    if (selected_value == "随手记") | (selected_value == "钱迹") | (selected_value == "有鱼记账")|(selected_value == "挖财记账") :
         for button in button_list:
             button.config(state=tk.NORMAL)
     else:
@@ -52,13 +52,18 @@ def load_config(info_data):
 
 def create_config(info_data):
     account_app_name = selected_value.get()
-    result = tk.messagebox.askyesno("是否有html文件", "针对< "+account_app_name+" >是否有本地网页配置文件？")
-    if result:
-        # load_html_to_classify_rule_list(info_data,selected_value.get())
-        info_data.get_classify_name_from_html(account_app_name)
-        print("有html文件")
-    else:
-        print("没有html文件")
+    if account_app_name == "随手记":
+        # 获得随手记 二级自定义分类
+        result = tk.messagebox.askyesno("是否有html文件", "针对< "+account_app_name+" >是否有本地网页配置文件？")
+        if result:
+            # load_html_to_classify_rule_list(info_data,selected_value.get())
+            info_data.get_classify_name_from_html(account_app_name)
+            print("有html文件")
+        else:
+            print("没有html文件")
+    elif account_app_name == "钱迹":
+        # 如何获得钱迹 自定义分类？？？ 暂时没想到办法
+        pass
 
     info_data.create_csv_config_file()
     button_config_create.config(text="创建配置文件完成！继续点击创建配置文件！")
@@ -122,22 +127,22 @@ if __name__ == "__main__":
     window = tk.Tk()
     window.title("Narymax AutoAccount "+auto_account_version)
     window.geometry("350x180")
-
-    # Create a dropdown list
     options = [ "随手记",
+                "钱迹",
+                "挖财记账",
+                "有鱼记账",
+                "百事AA记账",
         "Timi时光记账",
         "口袋记账",
         "可萌记账",
-        "挖财记账",
-        "有鱼记账",
         "松鼠记账",
         "洋葱记账",
-        "百事AA记账",
         "薄荷记账",
         "记账·海豚记账本",
-        "钱迹",
         "鲨鱼记账"
     ]
+
+    # Create a dropdown list
     selected_value = tk.StringVar(window)
     selected_value.set(options[0])
     dropdown_menu = tk.OptionMenu(window, selected_value, *options, command=update_label_app)

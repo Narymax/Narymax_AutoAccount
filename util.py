@@ -1,11 +1,14 @@
 # 常用util
 import os
+import csv
 import tkinter as tk
 from tkinter import filedialog
 import sys
+import xlwt
 import os.path as op
 import numpy as np
 import pandas as pd
+from openpyxl import load_workbook
 from datetime import datetime
 
 #  兼容打包后程序的路径读取
@@ -287,15 +290,161 @@ def write_dst_template_file(df, src_name, dst_app_name):
         )
         print("完成 " + dst_app_name + "账单适配")
 
-    file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name +'.xls'
-    with pd.ExcelWriter(op.join(str(get_current_path()), file_name)) as writer:
-        # 不保存序号
-        df.to_excel(writer, sheet_name='Sheet1', index=False)
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name +'.xls'
 
-    print("导出文件完成: " + op.join(str(get_current_path()), file_name))
+        save_pd_to_xls(df, file_name)
+        print("导出文件完成: " + op.join(str(get_current_path()), file_name))
+
+    # 适配钱迹
+    if dst_app_name == '钱迹':
+        # 定义新列的占位值 账单标记 非必须，可以赋空值
+        special_bill_signal_values = [""] * len(df)
+        df = (
+            df.rename(columns={"日期" : "时间","交易类型":"类型","一级分类名称": "分类", "二级分类名称": "二级分类", "账户": "账户1", "*账户": "账户2"})
+            .assign(special_bill_signal=special_bill_signal_values)
+            .rename(columns = {"special_bill_signal": "账单标记"})
+            .reindex(columns=['时间','分类', '二级分类', '类型', '金额','账户1', '账户2','备注',  '账单标记'])
+        )
+        # 将日期列从字符串转换为Pandas日期时间对象
+        df['时间'] = pd.to_datetime(df['时间'])
+        # 将日期时间对象转换为指定格式的字符串（例如：2018-04-08 22:15）
+        df['时间'] = df['时间'].dt.strftime('%Y-%m-%d %H:%M')
+        # 文件名
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.csv'
+
+        save_pd_to_csv(df, file_name)
+
+        print("保存文件完成: " + op.join(str(get_current_path()), file_name))
+
+    if dst_app_name == '有鱼记账':
+        # 定义新列的占位值
+        special_billbook = ["日常账本"] * len(df)
+        account_type = ["其他资产"]*len(df)
+        account_comment = [""] * len(df)
+        pic_url = [""] * len(df)
+        df = (
+            df.rename(columns={"交易类型": "收支类型", "日期": "时间","账户":"资金账户名称","金额":"账目金额", "二级分类名称": "账目分类", "备注":"账目备注"})
+            .assign(special_billbook=special_billbook,account_comment=account_comment,account_type=account_type,pic_url=pic_url)
+            .rename(columns={"special_billbook": "账本名称","account_type":"资金类型", "account_comment": "资金账户备注","pic_url":"图片"})
+            .reindex(columns=['时间', '资金账户名称', '资金类型', '资金账户备注', '收支类型', '账目分类','账目金额','成员','账目备注','账本名称','图片'])
+        )
+        # 只保留 收支 支出 类型
+        df = df[df['收支类型'].isin(['支出', '收入'])]
+
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xls'
+
+        save_pd_to_xls(df, file_name, sheet_name="收入支出")
+        print("导出文件完成: " + op.join(str(get_current_path()), file_name))
+
+    if dst_app_name == "挖财记账":
+        # 定义新列的占位值 添加3列数据
+        cruuency_type = ["人民币"] * len(df)
+        member_account = [""] * len(df)
+        reimbursement = ["非报销"] * len(df)
+        payer = [""] * len(df)
+        df = (
+            df.assign(cruuency_type=cruuency_type,member_account=member_account,reimbursement=reimbursement,payer=payer)
+            .rename(columns={"cruuency_type": "币种","member_account":"成员金额","reimbursement":"报销","payer":"付款方"})
+        )
+
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xls'
+
+        print("导出文件完成: " + op.join(str(get_current_path()), file_name))
+        df_outcome = df[df['交易类型'].isin(['支出'])]
+        df_outcome = (
+            df_outcome.rename(columns={"日期": "消费日期","一级分类名称": "支出大类", "二级分类名称": "支出小类", "金额":"消费金额","项目": "标签", "支付渠道": "商家"})
+            .reindex(columns=["消费日期", "支出大类", "支出小类", "消费金额", "币种", "账户", "标签", "商家", "报销", "成员金额", "备注"])
+
+        )
+        # save_pd_to_xls(df_outcome, file_name, sheet_name="支出")
+
+        df_income = df[df['交易类型'].isin(['收入'])]
+        df_income = (
+            df_income.rename(columns={"日期": "收入日期" ,"一级分类名称": "收入大类", "金额":"收入金额","项目": "标签"})
+            .reindex(columns=["收入日期", "收入大类", "收入金额", "币种", "账户", "标签", "付款方", "成员金额", "备注", "报销"])
+        )
+        # save_pd_to_xls(df_income, file_name, sheet_name="收入")
+
+        df_transfer = df[df['交易类型'].isin(['转账'])]
+        df_transfer = (
+            df_transfer.rename(columns={"日期": "转账时间" ,"账户": "转出账户", "金额":"转出金额","*账户": "转入账户","项目": "标签"})
+            .reindex(columns=["转账时间", "转出账户", "转出金额", "币种", "转入账户", "转入金额", "币种", "备注", "标签"])
+        )
+        # save_pd_to_xls(df_transfer, file_name, sheet_name="转账")
+
+        df_outcome_list,df_income_list,df_transfer_list = df_to_list(df_outcome),df_to_list(df_income),df_to_list(df_transfer)
+        # 打开一个工作簿
+        workbook = xlwt.Workbook()
+        # 添加一个新的工作表
+        worksheet = workbook.add_sheet(sheetname="支出", cell_overwrite_ok=True)
+        for i, row in enumerate(df_outcome_list):
+            for j, value in enumerate(row):
+                worksheet.write(i, j, value)
+
+        # 添加一个新的工作表
+        worksheet = workbook.add_sheet(sheetname="收入", cell_overwrite_ok=True)
+        for i, row in enumerate(df_income_list):
+            for j, value in enumerate(row):
+                worksheet.write(i, j, value)
+
+        # 添加一个新的工作表
+        worksheet = workbook.add_sheet(sheetname="转账", cell_overwrite_ok=True)
+        for i,row in enumerate(df_transfer_list):
+            for j,value in enumerate(row):
+                worksheet.write(i, j, value)
+        # 保存工作簿
+        workbook.save(op.join(str(get_current_path()), file_name))
+
+
+
+
+
+
 
     print("")
     return
+
+
+def df_to_list(df):
+    # 将 DataFrame 转换为二维列表
+    return [df.columns.tolist()] + df.values.tolist()
+
+def save_pd_to_csv(df, file_name):
+    # 将DataFrame转换为二维的Python列表，并将列名添加到第一行
+    df_list = [df.columns.tolist()] + df.astype(str).values.tolist()
+    # 创建CSV文件 解决乱码问题
+    # 这个编码除了使用UTF-8编码外，还会在文件开头添加一个BOM（Byte Order Mark）标识，这有助于Excel正确地解析文件并避免乱码问题。
+    with open(op.join(str(get_current_path()), file_name), mode='w', newline='', encoding='utf-8-sig') as file:
+        writer = csv.writer(file)
+        for row in df_list:
+            writer.writerow(row)
+
+
+def save_pd_to_xls(df, src_name, sheet_name="Sheet1"):
+    with pd.ExcelWriter(op.join(str(get_current_path()), src_name)) as writer:
+        # 不保存序号
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+# def save_pd_to_xls(df, src_name, sheet_name="Sheet1"):
+#     file_path = op.join(str(get_current_path()), src_name)
+#
+#     if op.exists(file_path):
+#         # 如果文件存在，使用 openpyxl 加载工作簿
+#         book = load_workbook(file_path)
+#         with pd.ExcelWriter(file_path, engine='openpyxl', mode='a') as writer:
+#             writer.book = book
+#             # 如果工作表已经存在，删除它
+#             if sheet_name in book.sheetnames:
+#                 del book[sheet_name]
+#             # 写入新的工作表
+#             df.to_excel(writer, sheet_name=sheet_name, index=False)
+#             writer.save()
+#     else:
+#         # 如果文件不存在，创建新的文件
+#         with pd.ExcelWriter(file_path, engine='openpyxl') as writer:
+#             df.to_excel(writer, sheet_name=sheet_name, index=False)
+
 
 def print_dog_head():
     print("\n\
