@@ -30,7 +30,7 @@ def init_df_columns(df, skiprows=0, use_column_name = True):
 
 def update_label_app(selected_value):
     label_app.config(text="选择配置账本: " + selected_value)
-    if (selected_value == "随手记") | (selected_value == "钱迹") | (selected_value == "有鱼记账")|(selected_value == "挖财记账") :
+    if (selected_value == "随手记") | (selected_value == "钱迹") | (selected_value == "有鱼记账")|(selected_value == "挖财记账")|(selected_value == "百事AA记账"):
         for button in button_list:
             button.config(state=tk.NORMAL)
     else:
@@ -107,7 +107,7 @@ def paylist_convert(info_data):
 
 if __name__ == "__main__":
 
-    auto_account_version = 'V1.3'
+    auto_account_version = 'V1.4'
 
     print("富强、民主、文明、和谐、自由、平等、公正、法治、爱国、敬业、诚信、友善")
     print_dog_head()
@@ -132,14 +132,14 @@ if __name__ == "__main__":
                 "挖财记账",
                 "有鱼记账",
                 "百事AA记账",
-        "Timi时光记账",
-        "口袋记账",
-        "可萌记账",
-        "松鼠记账",
-        "洋葱记账",
-        "薄荷记账",
-        "记账·海豚记账本",
-        "鲨鱼记账"
+        "Timi时光记账 <未适配>",
+        "口袋记账 <未适配>",
+        "可萌记账 <未适配>",
+        "松鼠记账 <未适配>",
+        "洋葱记账 <未适配>",
+        "薄荷记账 <未适配>",
+        "记账·海豚记账本 <未适配>",
+        "鲨鱼记账 <未适配>"
     ]
 
     # Create a dropdown list

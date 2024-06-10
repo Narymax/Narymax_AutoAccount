@@ -116,7 +116,8 @@ if __name__ == "__main__":
 
     # wechat_paybill_conv_dev(df,userInfo,"钱迹")
     # wechat_paybill_conv_dev(df,userInfo,"有鱼记账")
-    wechat_paybill_conv_dev(df, userInfo, "挖财记账")
+    # wechat_paybill_conv_dev(df, userInfo, "挖财记账")
+    wechat_paybill_conv_dev(df,userInfo,"百事AA记账")
 
 
 

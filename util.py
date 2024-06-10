@@ -395,6 +395,48 @@ def write_dst_template_file(df, src_name, dst_app_name):
         # 保存工作簿
         workbook.save(op.join(str(get_current_path()), file_name))
 
+    if dst_app_name == "百事AA记账":
+        # 定义新列的占位值 添加1列数据 货币
+        cruuency_type = ["人民币"] * len(df)
+        df = (
+            df.assign(cruuency_type=cruuency_type)
+            .rename(columns={"cruuency_type": "货币"})
+        )
+        income_outcome_file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '收支导入模板.xlsx'
+        df_inout_come = df[df['交易类型'].isin(['收入','支出'])]
+        df_inout_come = (
+            df_inout_come.rename(columns={"日期": "账单日期", "交易类型": "账单类型", "二级分类名称": "类别","备注":"描述","支付渠道":"标签"})
+            .reindex(columns=["帐单日期", "账单类型", "类别", "金额", "描述", "货币", "账户", "标签"])
+        )
+        save_pd_to_xlsx(df_inout_come, income_outcome_file_name, sheet_name="payment")
+        print("导出文件完成: " + op.join(str(get_current_path()), income_outcome_file_name))
+
+
+
+
+        transfer_file_name = datetime.now().strftime(
+            '%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '转账模板.xlsx'
+        df_transfer = df[df['交易类型'].isin(['转账'])]
+        df_transfer['转出金额']=df_transfer['金额']
+        df_transfer['转入金额'] = df_transfer['金额']
+        df_transfer['转出币种'] = df_transfer['货币']
+        df_transfer['转入币种'] = df_transfer['货币']
+        # 定义新列的占位值
+        account_book = [""] * len(df_transfer)
+        transfer_first_classify = ["转账"] * len(df_transfer)
+        transfer_second_classify = [""] * len(df_transfer)
+        transfer_info_source = ["自动同步"] * len(df_transfer)
+        df_transfer = (
+            df_transfer.assign(account_book=account_book,transfer_first_classify=transfer_first_classify,transfer_second_classify=transfer_second_classify,transfer_info_source=transfer_info_source)
+            .rename(columns={"日期":"时间","account_book": "账本","账户":"转出账户","*账户":"转入账户", "transfer_first_classify": "大类", "transfer_second_classify": "小类","transfer_info_source":"来源"})
+            .reindex(columns=["时间", "账本", "转出账户", "大类", "小类", "转出金额", "转出币种", "转入账户", "转入币种", "转入金额", "备注", "来源"])
+        )
+        save_pd_to_xlsx(df_transfer,transfer_file_name,sheet_name="转账")
+        print("导出文件完成: " + op.join(str(get_current_path()), transfer_file_name))
+
+
+
+
 
 
 
@@ -403,7 +445,9 @@ def write_dst_template_file(df, src_name, dst_app_name):
 
     print("")
     return
-
+def save_pd_to_xlsx(df, file_name, sheet_name="sheet1"):
+    with pd.ExcelWriter(op.join(str(get_current_path()), file_name), mode='a') as writer:
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 def df_to_list(df):
     # 将 DataFrame 转换为二维列表
