@@ -15,7 +15,7 @@
 
 ## 下载链接
 ver 1.4
-链接：https://pan.baidu.com/s/1fZndawow7LtVuF1i8WsLBQ?pwd=cn5z 提取码：cn5z
+链接：https://pan.baidu.com/s/15htb0xdk36cFCo1heIjASw 提取码：F024 
 ## 更新状态
 AutoAccount_V1.4
 - 支持```微信```、```支付宝账单```、```京东账单```到```随手记```、```钱迹```、```挖财记账```、```有鱼记账```、```百事AA记账```的自定义模板导入适配
