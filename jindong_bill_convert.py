@@ -11,8 +11,8 @@ from util import write_dst_template_file
 # df 列说明
 # 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
 # 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
-# 变成标准模板 +  "交易说明","商户名称"
-# | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
+# 变成标准模板 + "交易信息","交易对方"
+# | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易信息","交易对方"
 #  最后2列是自定义的
 def convert_jindong_bill_to_standard_accountlist(df,info_data):
     # 剔除京东与微信支付重复导出的账单
@@ -20,7 +20,7 @@ def convert_jindong_bill_to_standard_accountlist(df,info_data):
     df = df.drop(df[df['交易状态'] != '交易成功'].index)  # 删除交易没有成功的账单
 
     df['备注'] = df['备注']+ df['交易说明']+ '#' +df['商户名称']
-    df = df.sort_values('交易时间')
+
 
     # 定义新列的占位值
     secondClassName_values = ["未分类"] * len(df)
@@ -31,26 +31,35 @@ def convert_jindong_bill_to_standard_accountlist(df,info_data):
     # delta_values = [None] * len(df)  # 空值 可以是数字
     # 一步完成列名修改、增加新列和重新排序
     df = (
-        df.rename(columns={"交易时间": "日期", "交易分类": "一级分类名称","收/支": "交易类型","收/付款方式":"账户"})
+        df.rename(columns={"交易时间": "日期", "交易分类": "一级分类名称","收/支": "交易类型","收/付款方式":"账户","交易说明":"交易信息","商户名称":"交易对方"})
         .assign(secondClassName_values=secondClassName_values, account2_values=account2_values, user_values=user_values, paymentMethod_values=paymentMethod_values, projectName_values=projectName_values)
         .rename(columns={"secondClassName_values": "二级分类名称", "account2_values": "*账户", "user_values": "成员", "paymentMethod_values": "支付渠道", "projectName_values": "项目"})  # 将 Delta 列名修改为 得尔塔
-        .reindex(columns=["交易类型", "日期", "一级分类名称", "二级分类名称", "账户", "*账户", "金额", "成员", "支付渠道", "项目","备注","交易说明","商户名称"])
+        .reindex(columns=["交易类型", "日期", "一级分类名称", "二级分类名称", "账户", "*账户", "金额", "成员", "支付渠道", "项目","备注","交易信息","交易对方"])
     )
     print("完成标准模板转换")
 
     return df
 
 def jindong_papbill_auto_classify(df,info_data):
+
+    #  对标准模板进行数据预处理，排序，数据清洗。。。
+    df = info_data.preprocess_standardize_tample(df)
+
     # 筛选还京东白条  交易类型： 不计收支 -> 转账 （类似还信用卡）
-    condition_jindongcrediet = (df['交易类型'] == '不计收支') & (df['交易说明'] == '白条主动还款') & (df['商户名称'] == '京东金融')
+    condition_jindongcrediet = (df['交易类型'] == '不计收支') & (df['交易信息'] == '白条主动还款') & (df['交易对方'] == '京东金融')
     df.loc[condition_jindongcrediet, '交易类型'] = "转账"
     df.loc[condition_jindongcrediet, '账户'] = df.loc[condition_jindongcrediet, '账户'] + "还白条"
     df.loc[condition_jindongcrediet, '*账户'] = "京东白条"
 
-    condition_cashout = (df['交易类型'] == '不计收支') & (df['账户'].str.contains('代付')) & (df['交易说明'] == '京东钱包余额提现')
+    condition_cashout = (df['交易类型'] == '不计收支') & (df['账户'].str.contains('代付')) & (df['交易信息'] == '京东钱包余额提现')
     df.loc[condition_cashout, '交易类型'] = '转账'
     df.loc[condition_cashout, '账户'] = '京东钱包余额'
     df.loc[condition_cashout,'*账户'] = '京东提现账户'
+
+
+
+
+    #  标准模板处理。。。。
 
     # 屏蔽敏感交易号
     df = redacte_key_number(df, '备注', redacte_show_char="****")
@@ -78,8 +87,8 @@ def jindong_bill_conv(df,info_data,dst_app = '随手记'):
     # 交易时间, 交易分类, 商户名称, 交易说明, 收 / 支, 金额, 收 / 付款方式, 交易状态, 交易订单号, 商家订单号, 备注
     # 2024 - 06 - 02 22: 31:30, 医疗保健, 京东平台商户, H&K 一次性医用外科灭菌口罩, 支出, 14.10, 微信支付, 交易成功, 200000000000, 4000000000000008,
 
-    # 变成标准模板 +  "交易说明","商户名称"
-    # | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易说明","商户名称"
+    # 变成标准模板 +  "交易信息","交易对方"
+    # | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +    "交易信息","交易对方"
     #  最后2列是自定义的
 
     df = convert_jindong_bill_to_standard_accountlist(df,info_data)

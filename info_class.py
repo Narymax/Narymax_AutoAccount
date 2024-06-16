@@ -21,7 +21,8 @@ class InfoClass:
         self.character = "M"
         self.use_suggestion_classify = True  # 没有分类规则的使用账单自带的分类标签
         self.redacte_show_string = "****"  # 屏蔽交易号
-        self.match_list_rule = []   # 旧版本 ，使用两个yaml
+        self.sort_by_date = True  # 按日期排序
+        self.match_list_rule = []   # 旧版本 ，使用两个yaml,一个存配置信息，一个存分类关键字
         self.classify_csv_rule = []  # 新版本，使用一个xls  支出分类规则
         self.income_classify_csv_rule = []  # 新版本，使用一个xls  收入分类规则 默认捕捉关键字退款，把一级分类、二级分类都变成 退款 ['收入分类规则','退款','退款','退款']
         self.transfer_classify_csv_rule = []  # 新版本，使用一个xls  转账分类规则
@@ -83,6 +84,8 @@ class InfoClass:
                 self.default_proj_name = value_str
             if 'redacte_show_string' in str(parameter):
                 self.redacte_show_string = str(value)
+            if 'sort_by_date' in str(parameter):
+                self.sort_by_date = bool(value)
             if '支出分类规则' in str(parameter):
                 if str(value) != '':
                     flag_configfile_exist_calssify_rule = True
@@ -138,6 +141,7 @@ class InfoClass:
             ["use_suggesstion_classify", self.use_suggestion_classify, "使用原始账单默认的分类"],
             ["default_proj_name", self.default_proj_name, "默认支出的项目名称"],
             ["redacte_show_string", self.redacte_show_string, "屏蔽交易号码，显示字符，连续数字大于9个"],
+            ["sort_by_date", self.sort_by_date, "是否按日期排序"],
             [""]
         ]
         if self.classify_csv_rule != []:
@@ -322,8 +326,40 @@ class InfoClass:
         else:
             self.match_list_rule = match_list
 
+    def sort_standard_tample_by_date(self,df):
+        # 按时间排序
+        # if self.sort_by_date:
+        #     # df = df.sort_values('日期', ascending=False).reset_index(drop=True)
+        #     df = df.sort_values(by='日期', key=lambda x: pd.to_datetime(x, errors='coerce'),
+        #                         ascending=False).reset_index(drop=True)
+        #     print("按时间排序，默认逆序排序，从近期到远期")
+        # else:
+        #     # df = df.sort_values('日期', ascending=True).reset_index(drop=True)
+        #     df = df.sort_values(by='日期', key=lambda x: pd.to_datetime(x, errors='coerce'),
+        #                         ascending=True).reset_index(drop=True)
+        #     print("按时间排序，顺序排序")
+        # return df
+        temp_df = df.copy()
+        temp_df['临时日期'] = pd.to_datetime(temp_df['日期'], errors='coerce')
 
+        # 时间排序
+        if self.sort_by_date:
+            temp_df = temp_df.sort_values(by='临时日期', ascending=False).reset_index(drop=True)
+            print("按时间排序，默认逆序排序，从近期到远期")
+        else:
+            temp_df = temp_df.sort_values(by='临时日期', ascending=True).reset_index(drop=True)
+            print("按时间排序，顺序排序")
 
+        # 删除临时列
+        # temp_df = temp_df.drop(columns=['临时日期'])
+        temp_df = temp_df.drop('临时日期', axis=1)
+
+        return temp_df
+
+    #  对标准模板进行数据预处理，排序，数据清洗。。。
+    def preprocess_standardize_tample(self,df):
+        df = self.sort_standard_tample_by_date(df)
+        return df
 
     def greet(self):
         print(f"Hello, {self.user}!")

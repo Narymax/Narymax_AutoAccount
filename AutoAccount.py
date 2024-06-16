@@ -34,8 +34,9 @@ def update_label_app(selected_value):
         for button in button_list:
             button.config(state=tk.NORMAL)
     else:
-        for button in button_list:
-            button.config(state=tk.DISABLED)
+        # for button in button_list:
+        #     button.config(state=tk.DISABLED)
+        pass
 
 
 def load_config(info_data):
@@ -132,14 +133,14 @@ if __name__ == "__main__":
                 "挖财记账",
                 "有鱼记账",
                 "百事AA记账",
-        "Timi时光记账 <未适配>",
-        "口袋记账 <未适配>",
-        "可萌记账 <未适配>",
-        "松鼠记账 <未适配>",
-        "洋葱记账 <未适配>",
-        "薄荷记账 <未适配>",
-        "记账·海豚记账本 <未适配>",
-        "鲨鱼记账 <未适配>"
+        "Timi时光记账-wx",
+        "口袋记账-wx",
+        "可萌记账-wx",
+        "松鼠记账-wx",
+        "洋葱记账-wx",
+        "薄荷记账-wx",
+        "记账·海豚记账本-wx",
+        "鲨鱼记-wx>"
     ]
 
     # Create a dropdown list

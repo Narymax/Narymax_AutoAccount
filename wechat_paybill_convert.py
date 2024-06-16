@@ -13,7 +13,7 @@ from util import write_dst_template_file
 # 交易时间	     交易类型 交易对方	商品	收/支	金额(元)	支付方式	当前状态	交易单号	商户单号	备注
 # 2024-04-02 18:31:00,商户消费,肯德基,KFC全家桶,支出,¥32.90,中国银行信用卡(0123),已存入零钱,"42000012345890	","202405666678",/
 # 变成标准模板
-# | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +   "交易对方","当前状态"
+# | 交易类型 | 日期 | 一级分类名称 | 二级分类名称 | 账户 | *账户 | 金额 | 成员 | 支付渠道 | 项目 | 备注 | +  "交易信息", "交易对方","当前状态"
 def convert_wechat_paybill_to_standard_accountlist(df, info_data):
     df['备注'] = df['备注']+ df['商品']+ '#' +df['交易对方']
     df = df.sort_values('交易时间')
@@ -26,20 +26,24 @@ def convert_wechat_paybill_to_standard_accountlist(df, info_data):
     projectName_values = [""] * len(df)  # 空字符串
     # 一步完成列名修改、增加新列和重新排序
     df = (
-        df.rename(columns={"交易时间": "日期", "交易类型":"一级分类名称","收/支": "交易类型", "金额(元)": "金额", "支付方式": "账户"})
+        df.rename(columns={"交易时间": "日期", "交易类型":"一级分类名称","收/支": "交易类型", "金额(元)": "金额", "支付方式": "账户","商品":"交易信息"})
         .assign(secondClassName_values=secondClassName_values, account2_values=account2_values, user_values=user_values,
                 paymentMethod_values=paymentMethod_values, projectName_values=projectName_values)
         .rename(columns={"secondClassName_values": "二级分类名称", "account2_values": "*账户", "user_values": "成员",
                          "paymentMethod_values": "支付渠道", "projectName_values": "项目"})
         .reindex(
             columns=["交易类型", "日期", "一级分类名称", "二级分类名称", "账户", "*账户", "金额", "成员", "支付渠道",
-                     "项目", "备注", "商品", "交易对方","当前状态"])
+                     "项目", "备注", "交易信息", "交易对方","当前状态"])
     )
+    df['二级分类名称'] = df['一级分类名称'].astype(str)
 
     return df
 
 
 def wechat_paybill_auto_classify(df,info_data):
+    #  对标准模板进行数据预计处理，排序，数据清洗。。。
+    df = info_data.preprocess_standardize_tample(df)
+
     # 去金额里面的人民币符号 ¥ 和 备注的 / 一级分类的 |
     df['金额'] = df['金额'].str.replace('¥', '')
     df['备注'] = df['备注'].str.replace('/', '')

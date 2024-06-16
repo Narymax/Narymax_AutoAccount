@@ -277,6 +277,43 @@ def redacte_key_number(df, colum_name, dedacte_phone_number=False, redacte_trade
     df[~mask] = replace_continue_number(df[~mask], colum_name, replace_char=redacte_show_char)
     return df
 
+def convert_back_to_wechat_style_account(df):
+
+    # 确定两列 "商品" "交易对方"
+    if "交易信息" in df.columns:
+        df["商品"] = df["交易信息"]
+    else:
+        df["商品"] = ""
+
+    if "交易对方" in df.columns:
+        pass
+    else:
+        df["交易对方"] = ""
+    if "当前状态" in df.columns:
+        pass
+    else:
+        df["当前状态"] = ""
+    trade_num = ["00000"] * len(df)
+    store_num = ["00000"] * len(df)
+
+    # 在备注里面尽量保留更多信息
+    df = (
+        df.rename(columns={"日期":"交易时间" , "一级分类名称":"交易类型","交易类型":"收/支" , "金额":"金额(元)" ,"账户" :"支付方式" })
+        .assign(trade_num=trade_num,store_num=store_num)
+        .rename(columns={"trade_num": "交易单号","store_num": "商户单号"})
+        .reindex(columns=["交易时间", "交易类型", "交易对方", "商品", "收/支", "金额(元)", "支付方式", "当前状态", "交易单号", "商户单号", "备注"])
+    )
+
+    df["金额(元)"] = '¥' + df["金额(元)"].astype(str)
+
+    df.loc[df['收/支'] == '收入', '当前状态'] = '已存入零钱'
+    df.loc[df['收/支'] == '支出', '当前状态'] = '支付成功'
+    # 删除交易类型为 “转账” 的数据
+    df = df[df['收/支'] != '转账']
+
+
+
+    return df
 
 def write_dst_template_file(df, src_name, dst_app_name):
     # 变成指定app 模板
@@ -434,6 +471,21 @@ def write_dst_template_file(df, src_name, dst_app_name):
         save_pd_to_xlsx(df_transfer,transfer_file_name,sheet_name="转账")
         print("导出文件完成: " + op.join(str(get_current_path()), transfer_file_name))
 
+    # 都不符合 就转回微信格式
+    selected_value = dst_app_name
+    if (selected_value == "随手记") | (selected_value == "钱迹") | (selected_value == "有鱼记账") | (
+                selected_value == "挖财记账") | (selected_value == "百事AA记账"):
+        pass
+    else:
+        df = convert_back_to_wechat_style_account(df)
+
+        # 文件名
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '_wechat风格.csv'
+
+        save_pd_to_wx_csv(df, file_name)
+
+        print("保存文件完成: " + op.join(str(get_current_path()), file_name))
+
 
 
 
@@ -463,6 +515,34 @@ def save_pd_to_csv(df, file_name):
         for row in df_list:
             writer.writerow(row)
 
+def save_pd_to_wx_csv(df, file_name):
+    header_data = [
+        ["微信支付账单明细", "", "", "", "", "", "", "", "", "", ""],
+        ["微信昵称：[小明]", "", "", "", "", "", "", "", "", "", ""],
+        ["起始时间：[2024-04-02 00:00:00] 终止时间：[2024-05-14 14:42:52]", "", "", "", "", "", "", "", "", "", ""],
+        ["导出类型：[全部]", "", "", "", "", "", "", "", "", "", ""],
+        ["导出时间：[2024-05-14 14:43:30]", "", "", "", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", "", "", ""],
+        ["共999笔记录", "", "", "", "", "", "", "", "", "", ""],
+        ["收入：9笔 332.84元", "", "", "", "", "", "", "", "", "", ""],
+        ["支出：126笔 9999.99元", "", "", "", "", "", "", "", "", "", ""],
+        ["中性交易：0笔 0.00元", "", "", "", "", "", "", "", "", "", ""],
+        ["注：", "", "", "", "", "", "", "", "", "", ""],
+        ["1. 充值/提现/理财通购买/零钱通存取/信用卡还款等交易，将计入中性交易", "", "", "", "", "", "", "", "", "", ""],
+        ["2. 本明细仅展示当前账单中的交易，不包括已删除的记录", "", "", "", "", "", "", "", "", "", ""],
+        ["3. 本明细仅供个人对账使用", "", "", "", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", "", "", ""],
+        ["----------------------微信支付账单明细列表--------------------", "", "", "", "", "", "", "", "", "", ""]
+    ]
+    # 将DataFrame转换为二维的Python列表，并将列名添加到第一行
+    df_list = [df.columns.tolist()] + df.astype(str).values.tolist()
+    df_dst = header_data + df_list
+    # 创建CSV文件 解决乱码问题
+    # 这个编码除了使用UTF-8编码外，还会在文件开头添加一个BOM（Byte Order Mark）标识，这有助于Excel正确地解析文件并避免乱码问题。
+    with open(op.join(str(get_current_path()), file_name), mode='w', newline='', encoding='utf-8-sig') as file:
+        writer = csv.writer(file)
+        for row in df_dst:
+            writer.writerow(row)
 
 def save_pd_to_xls(df, src_name, sheet_name="Sheet1"):
     with pd.ExcelWriter(op.join(str(get_current_path()), src_name)) as writer:
