@@ -10,6 +10,7 @@ from collections import OrderedDict
 from bs4 import BeautifulSoup
 from datetime import datetime
 import math
+import classify_keywords_list
 
 # 用户配置类
 # 查看测试用例
@@ -22,6 +23,10 @@ class InfoClass:
         self.use_suggestion_classify = True  # 没有分类规则的使用账单自带的分类标签
         self.redacte_show_string = "****"  # 屏蔽交易号
         self.sort_by_date = True  # 按日期排序
+        self.flag_outcome_classify_demo  = True  # 使用支出分类规则的默认关键词
+        self.flag_income_classify_demo = False
+        self.flag_transfer_classify_demo = False
+
         self.match_list_rule = []   # 旧版本 ，使用两个yaml,一个存配置信息，一个存分类关键字
         self.classify_csv_rule = []  # 新版本，使用一个xls  支出分类规则
         self.income_classify_csv_rule = []  # 新版本，使用一个xls  收入分类规则 默认捕捉关键字退款，把一级分类、二级分类都变成 退款 ['收入分类规则','退款','退款','退款']
@@ -75,6 +80,12 @@ class InfoClass:
                 self.min_pay_filter = float(value)
             if 'use_suggertion_classify' in str(parameter):
                 self.use_suggertion_classify = bool(value)
+            if 'flag_outcome_classify_demo' in str(parameter):
+                self.flag_outcome_classify_demo = bool(value)
+            if 'flag_income_classify_demo' in str(parameter):
+                self.flag_income_classify_demo = bool(value)
+            if 'flag_transfer_classify_demo' in str(parameter):
+                self.flag_transfer_classify_demo = bool(value)
             if 'default_proj_name' in str(parameter):
                 if isinstance(value, float) and math.isnan(value):
                     # 处理 flat 的value 是nan,变成'nan'
@@ -99,9 +110,14 @@ class InfoClass:
                     flag_transfer_configfile_exist_calssify_rule = True
                     self.transfer_classify_csv_rule.append(row)
 
+
+
         if not flag_configfile_exist_calssify_rule:
+            if self.flag_outcome_classify_demo:
+                self.classify_csv_rule = classify_keywords_list.default_outcome_classify_rule_data
+            else:
             # 如果配置文件中没有分类规则，那么就用默认的空列表
-            self.classify_csv_rule = []
+                self.classify_csv_rule = []
         if not flag_income_configfile_exist_calssify_rule:
             self.income_classify_csv_rule = []
         if not flag_transfer_configfile_exist_calssify_rule:
@@ -142,20 +158,28 @@ class InfoClass:
             ["default_proj_name", self.default_proj_name, "默认支出的项目名称"],
             ["redacte_show_string", self.redacte_show_string, "屏蔽交易号码，显示字符，连续数字大于9个"],
             ["sort_by_date", self.sort_by_date, "是否按日期排序"],
+            ["flag_outcome_classify_demo",self.flag_outcome_classify_demo,"支出分类模板不存在时，是否创建默认分类模板"],
+            ["flag_income_classify_demo",self.flag_income_classify_demo,"收入分类模板不存在时，是否创建默认分类模板（暂不支持）"],
+            ["flag_transfer_classify_demo",self.flag_transfer_classify_demo,"转账分类模板不存在时，是否创建默认分类模板（暂不支持）"],
             [""]
         ]
         if self.classify_csv_rule != []:
-            data.append(['', '第一级分类名称', '第二级分类名称', '支出关键字','...','...'])
+            data.append(['', '<支出>第一级分类名称', '<支出>第二级分类名称', '支出关键字','...','...'])
             for row in self.classify_csv_rule:
                 data.append(row)
+        else:
+            if self.flag_outcome_classify_demo:
+                data.append(['', '<支出>第一级分类名称', '<支出>第二级分类名称', '支出关键字','...','...'])
+                for row in classify_keywords_list.default_outcome_classify_rule_data:
+                    data.append(row)
 
         if self.income_classify_csv_rule != []:
-            data.append(['', '第一级分类名称', '第二级分类名称', '收入关键字','...','...'])
+            data.append(['', '<收入>第一级分类名称', '<收入>第二级分类名称', '收入关键字','...','...'])
             for row in self.income_classify_csv_rule:
                 data.append(row)
 
         if self.transfer_classify_csv_rule != []:
-            data.append(['', '第一级分类名称', '第二级分类名称', '转账关键字','...','...'])
+            data.append(['', '<转账>第一级分类名称', '<转账>第二级分类名称', '转账关键字','...','...'])
             for row in self.transfer_classify_csv_rule:
                 data.append(row)
 
