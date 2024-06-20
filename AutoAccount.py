@@ -108,7 +108,7 @@ def paylist_convert(info_data):
 
 if __name__ == "__main__":
 
-    auto_account_version = 'V1.4'
+    auto_account_version = 'V1.4.1'
 
     print("富强、民主、文明、和谐、自由、平等、公正、法治、爱国、敬业、诚信、友善")
     print_dog_head()
@@ -140,7 +140,11 @@ if __name__ == "__main__":
         "洋葱记账-wx",
         "薄荷记账-wx",
         "记账·海豚记账本-wx",
-        "鲨鱼记-wx>"
+        "鲨鱼记账-wx",
+        "daak记账-wx",
+        "一木记账-wx",
+        "卡片记账-wx",
+        "喵喵记账-wx"
     ]
 
     # Create a dropdown list
