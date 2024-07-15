@@ -108,7 +108,7 @@ def paylist_convert(info_data):
 
 if __name__ == "__main__":
 
-    auto_account_version = 'V1.4.1'
+    auto_account_version = 'V1.4.2'
 
     print("富强、民主、文明、和谐、自由、平等、公正、法治、爱国、敬业、诚信、友善")
     print_dog_head()
