@@ -33,12 +33,12 @@ class InfoClass:
         self.transfer_classify_csv_rule = []  # 新版本，使用一个xls  转账分类规则
 
     def load_config_file_from_tk_window(self):
-        file_path = select_file_from_tk(file_extension = '.xls',show_title = '请选择配置文件 xls类型')
+        file_path = select_file_from_tk(file_extension = '.xlsx',show_title = '请选择配置文件 xls类型')
         self.load_config_file(file_path)
         if file_path=='':
             return "user abort select"
         else:
-            return "load .xls"
+            return "load .xlsx"
 
     def load_config_file(self,xls_path):
 
@@ -47,8 +47,8 @@ class InfoClass:
 
         print("检查配置文件路径存在性： ",os.path.exists(xls_path))  # True 表示文件路径正确
 
-        # xlrd 读取xls,xlsx读取失败，应该是pandas版本不对 pandas/io/excel.py报错
-        df = pd.read_excel(xls_path, engine='xlrd')
+        # 读取xls,xlsx读取失败，应该是pandas版本不对 pandas/io/excel.py报错
+        df = pd.read_excel(xls_path, engine='openpyxl')
         # 初始化一个空列表来存储每行数据
         rows_as_lists = []
         # 逐行遍历 DataFrame 并将每行转换为列表
@@ -199,14 +199,14 @@ class InfoClass:
             row_dict = {df.columns[i]: row[i] if i < len(row) else '' for i in range(len(df.columns))}
 
             # 追加行到 DataFrame 中
-            df = df.append(row_dict, ignore_index=True)
+            df = pd.concat([df, pd.DataFrame([row_dict])], ignore_index=True)
 
         df = df.fillna('')
         print(df)
 
         current_path = get_current_path()
 
-        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+"config.xls"
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ')+"config.xlsx"
 
         # 先判断路径是否存在，如果不存在就创建
         path = current_path + "/config"
@@ -219,7 +219,7 @@ class InfoClass:
         # 创建xls文件
         # 保存到 Excel 文件
         xls_file_path = current_path + "/config/" + file_name
-        df.to_excel(xls_file_path, index=False, engine='xlwt')
+        df.to_excel(xls_file_path, index=False, engine='openpyxl')
 
         print(f"数据已成功保存到 Excel 文件：{xls_file_path}")
 

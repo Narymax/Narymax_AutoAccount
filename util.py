@@ -27,7 +27,7 @@ def read_paylist_file():
     curpath = current_path
     print(curpath)
     # 读取帐单 文件
-    csv_file_path = select_file_from_tk('.csv', show_title='请选择账单文件(支付宝、微信都可以)')
+    csv_file_path = select_file_from_tk(show_title='请选择账单文件(支付宝、微信都可以)')
     names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P']
     if csv_file_path == '':
         return 'no_file',None
@@ -38,7 +38,16 @@ def read_paylist_file():
             df = pd.read_csv(csv_file_path, names=names, skiprows=0, encoding='gbk')
         except Exception as ex:
             # engine='python' 可以打开，但是中文是乱码 encoding='utf-8' 可以打开，中文正常
-            df = pd.read_csv(csv_file_path, names=names, skiprows=0, engine='python', encoding='utf-8')
+            try:
+                df = pd.read_csv(csv_file_path, names=names, skiprows=0, engine='python', encoding='utf-8')
+            except Exception as ex:
+                try:
+                    names = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
+                    df = pd.read_excel(csv_file_path, sheet_name=0, names=names, engine='openpyxl')
+                except Exception as ex:
+                    print("Error reading file:", ex)
+                    return 'read_csv_error', None
+
         return 'read_csv_ok', df
 
 
@@ -75,19 +84,19 @@ def redacte_key_number(df,colum_name,dedacte_phone_number=False,redacte_trade_nu
         df[~mask] = replace_continue_number(df[~mask],colum_name,replace_char=redacte_show_char)
         return df
 
-#  正则提取包含手机的mask
-def extract_phone(df,column_name):
 
-        pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
-        mask_middle = df[column_name].str.contains(pattern_middle, regex=True)
-        pattern_begin = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配从头开始连续11位数字 1731234567aa
-        mask_begin = df[column_name].str.contains(pattern_begin, regex=True)
-        pattern_end = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字然后结束  aabb1731234567
-        mask_end = df[column_name].str.contains(pattern_end, regex=True)
-        mask = mask_middle | mask_begin | mask_end
-        print("phone number extracted\n")
-        print(df[mask])
-        return mask
+def extract_phone(df,column_name):
+    """正则提取包含手机的mask"""
+    pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
+    mask_middle = df[column_name].str.extract(pattern_middle)
+    pattern_begin = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配从头开始连续11位数字 1731234567aa
+    mask_begin = df[column_name].str.extract(pattern_begin)
+    pattern_end = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字然后结束  aabb1731234567
+    mask_end = df[column_name].str.extract(pattern_end)
+    mask = mask_middle | mask_begin | mask_end
+    print("phone number extracted\n")
+    print(df[mask])
+    return mask
 
 
 def replace_continue_number(df, colum_name, num=9, replace_char=''):
@@ -244,11 +253,11 @@ def delete_much_than_9_nums():
 #  提取包含手机的mask
 def extract_phone(df, column_name):
     pattern_middle = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配中间连续11位数字  aa1731234567bb
-    mask_middle = df[column_name].str.contains(pattern_middle, regex=True)
+    mask_middle = df[column_name].str.extract(pattern_middle, expand=False)
     pattern_begin = r'^1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}\D'  # 匹配从头开始连续11位数字 1731234567aa
-    mask_begin = df[column_name].str.contains(pattern_begin, regex=True)
+    mask_begin = df[column_name].str.extract(pattern_begin, expand=False)
     pattern_end = r'\D1(3[0-9]|5[0-3,5-9]|7[1-3,5-8]|8[0-9])\d{8}$'  # 匹配连续11位数字然后结束  aabb1731234567
-    mask_end = df[column_name].str.contains(pattern_end, regex=True)
+    mask_end = df[column_name].str.extract(pattern_end, expand=False)
     mask = mask_middle | mask_begin | mask_end
     print("phone number extracted\n")
     print(df[mask])
@@ -327,7 +336,7 @@ def write_dst_template_file(df, src_name, dst_app_name):
         )
         print("完成 " + dst_app_name + "账单适配")
 
-        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name +'.xls'
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name +'.xlsx'
 
         save_pd_to_xls(df, file_name)
         print("导出文件完成: " + op.join(str(get_current_path()), file_name))
@@ -368,7 +377,7 @@ def write_dst_template_file(df, src_name, dst_app_name):
         # 只保留 收支 支出 类型
         df = df[df['收支类型'].isin(['支出', '收入'])]
 
-        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xls'
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xlsx'
 
         save_pd_to_xls(df, file_name, sheet_name="收入支出")
         print("导出文件完成: " + op.join(str(get_current_path()), file_name))
@@ -384,7 +393,7 @@ def write_dst_template_file(df, src_name, dst_app_name):
             .rename(columns={"cruuency_type": "币种","member_account":"成员金额","reimbursement":"报销","payer":"付款方"})
         )
 
-        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xls'
+        file_name = datetime.now().strftime('%Y-%m-%d %H_%M_%S ') + dst_app_name + '导入' + src_name + '.xlsx'
 
         print("导出文件完成: " + op.join(str(get_current_path()), file_name))
         df_outcome = df[df['交易类型'].isin(['支出'])]

@@ -12,7 +12,7 @@ from util import cut_df_Acol_tails_to_Bcol
 from util import write_dst_template_file
 from datetime import datetime
 
-# 微信原始数据
+# 支付宝原始数据
 # 交易时间,交易分类,交易对方,对方账号,商品说明,收/支,金额,收/付款方式,交易状态,交易订单号,商家订单号,备注,
 # 2024-02-11 19:02:59,餐饮美食,大润发,fn***@feiniu.com,300080,中国银行信用卡(0000),交易成功,2029,8114,,
 #

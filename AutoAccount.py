@@ -43,7 +43,7 @@ def load_config(info_data):
     load_result = info_data.load_config_file_from_tk_window()
     label_user.config(text=info_data.user)
 
-    if load_result == "load .xls":
+    if load_result == "load .xlsx":
         button_config_load.config(text="加载配置文件完成！继续点击覆盖当前配置文件！")
     elif load_result == "user abort select":
         pass
@@ -82,10 +82,11 @@ def paylist_convert(info_data):
         return
     else:
         if df.at[0, 'A'].find('微信') != -1:
+            print("判定为微信账单")
             file_type = '微信'
             df.fillna('', inplace=True)
             # wechat_paybill_conv(df, info_data)
-            df = init_df_columns(df, 15, True)
+            df = init_df_columns(df, 14, True)
             wechat_paybill_conv_dev(df, info_data,dst_app)
         elif check_first_column_contains_string(df,"支付宝"):
             file_type = '支付宝'
@@ -158,7 +159,7 @@ if __name__ == "__main__":
     label_app.pack()
 
     current_path = get_current_path()
-    config_file_name = current_path + "/config/config.xls"
+    config_file_name = current_path + "/config/config.xlsx"
 
     if not os.path.exists(config_file_name):
         print(f"Path '{config_file_name}'默认配置文件不存在.")
